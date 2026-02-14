@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Biohacking Tools Dashboard</title>
+<style>
+  :root {
+    --bg: #0f172a;
+    --surface: #1e293b;
+    --surface2: #334155;
+    --border: #475569;
+    --text: #e2e8f0;
+    --text-muted: #94a3b8;
+    --accent: #38bdf8;
+    --accent-dim: #0ea5e9;
+    --danger: #f87171;
+    --warn: #fbbf24;
+    --ok: #4ade80;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    padding: 2rem;
+  }
+
+  .header {
+    text-align: center;
+    margin-bottom: 2.5rem;
+  }
+  .header h1 {
+    font-size: 1.75rem;
+    font-weight: 700;
+    margin-bottom: 0.25rem;
+  }
+  .header .subtitle {
+    color: var(--text-muted);
+    font-size: 0.9rem;
+  }
+  .header .badge {
+    display: inline-block;
+    margin-top: 0.75rem;
+    padding: 0.25rem 0.75rem;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 1rem;
+    font-size: 0.75rem;
+    color: var(--accent);
+    letter-spacing: 0.5px;
+  }
+
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 1.25rem;
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+
+  .tool-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 0.75rem;
+    padding: 1.5rem;
+    text-decoration: none;
+    color: var(--text);
+    transition: border-color 0.2s, transform 0.15s, box-shadow 0.2s;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    position: relative;
+    overflow: hidden;
+  }
+  .tool-card:hover {
+    border-color: var(--accent);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+  }
+
+  .tool-card .icon {
+    font-size: 2rem;
+    line-height: 1;
+  }
+
+  .tool-card h2 {
+    font-size: 1.1rem;
+    font-weight: 600;
+  }
+
+  .tool-card .desc {
+    font-size: 0.85rem;
+    color: var(--text-muted);
+    line-height: 1.5;
+    flex: 1;
+  }
+
+  .tool-card .meta {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.75rem;
+    margin-top: 0.25rem;
+  }
+
+  .tag {
+    padding: 0.15rem 0.5rem;
+    border-radius: 0.25rem;
+    font-size: 0.7rem;
+    font-weight: 600;
+    letter-spacing: 0.3px;
+  }
+  .tag-ready { background: rgba(74,222,128,0.15); color: var(--ok); }
+  .tag-planned { background: rgba(148,163,184,0.15); color: var(--text-muted); }
+
+  .category {
+    color: var(--accent);
+    font-size: 0.7rem;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    font-weight: 600;
+  }
+
+  .section-title {
+    max-width: 1200px;
+    margin: 2.5rem auto 1rem;
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 0.5rem;
+  }
+  .section-title:first-of-type { margin-top: 0; }
+
+  .footer {
+    text-align: center;
+    margin-top: 3rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--border);
+    font-size: 0.75rem;
+    color: var(--text-muted);
+  }
+  .footer a { color: var(--accent); text-decoration: none; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>Biohacking Tools</h1>
+  <div class="subtitle">Health & Longevity OS - Client-Side Tool Suite</div>
+  <div class="badge">6 of 10 tools built</div>
+</div>
+
+<div class="section-title">Available Tools</div>
+<div class="grid">
+
+  <a href="fasting-timer.html" class="tool-card">
+    <div class="icon">&#9201;</div>
+    <h2>Fasting Timer</h2>
+    <div class="desc">Intermittent fasting tracker with presets (16:8, 18:6, OMAD, 24-48h), progress ring, streak counter, and history.</div>
+    <div class="meta">
+      <span class="category">Nutrition</span>
+      <span class="tag tag-ready">Ready</span>
+    </div>
+  </a>
+
+  <a href="zone2-hr-calculator.html" class="tool-card">
+    <div class="icon">&#9829;</div>
+    <h2>Zone 2 HR Calculator</h2>
+    <div class="desc">Heart rate zones via Maffetone, Karvonen, and %MaxHR formulas. Visual zone chart with training guidance.</div>
+    <div class="meta">
+      <span class="category">Cardio</span>
+      <span class="tag tag-ready">Ready</span>
+    </div>
+  </a>
+
+  <a href="sleep-debt-tracker.html" class="tool-card">
+    <div class="icon">&#9790;</div>
+    <h2>Sleep Debt Tracker</h2>
+    <div class="desc">Track nightly sleep, calculate 7/14-day debt, visualize patterns, and estimate recovery time needed.</div>
+    <div class="meta">
+      <span class="category">Recovery</span>
+      <span class="tag tag-ready">Ready</span>
+    </div>
+  </a>
+
+  <a href="unit-converter.html" class="tool-card">
+    <div class="icon">&#8644;</div>
+    <h2>Health Unit Converter</h2>
+    <div class="desc">10 medical conversions: blood sugar, cholesterol, triglycerides, BMI, creatinine, hemoglobin, and more. With reference ranges.</div>
+    <div class="meta">
+      <span class="category">Reference</span>
+      <span class="tag tag-ready">Ready</span>
+    </div>
+  </a>
+
+  <a href="sinus-trigger-log.html" class="tool-card">
+    <div class="icon">&#128168;</div>
+    <h2>Sinusitis Trigger Log</h2>
+    <div class="desc">Log sinus episodes with severity, triggers, symptoms, and weather. Pattern analysis over time.</div>
+    <div class="meta">
+      <span class="category">Tracking</span>
+      <span class="tag tag-ready">Ready</span>
+    </div>
+  </a>
+
+  <a href="#" class="tool-card" style="opacity:0.5; pointer-events:none;">
+    <div class="icon">&#128147;</div>
+    <h2>HRV Plotter</h2>
+    <div class="desc">Import and visualize Heart Rate Variability data. Trend analysis, morning readiness score, and recovery insights.</div>
+    <div class="meta">
+      <span class="category">Recovery</span>
+      <span class="tag tag-planned">Planned</span>
+    </div>
+  </a>
+
+</div>
+
+<div class="section-title">Planned Tools</div>
+<div class="grid">
+
+  <div class="tool-card" style="opacity:0.45;">
+    <div class="icon">&#127939;</div>
+    <h2>Hyrox Calculator</h2>
+    <div class="desc">Hyrox race pacing calculator. Split targets per station, transition estimates, and total time prediction.</div>
+    <div class="meta">
+      <span class="category">Performance</span>
+      <span class="tag tag-planned">Planned</span>
+    </div>
+  </div>
+
+  <div class="tool-card" style="opacity:0.45;">
+    <div class="icon">&#128138;</div>
+    <h2>Supplement Checker</h2>
+    <div class="desc">Check supplement interactions, timing conflicts, and stacking recommendations. Sertraline-aware.</div>
+    <div class="meta">
+      <span class="category">Supplements</span>
+      <span class="tag tag-planned">Planned</span>
+    </div>
+  </div>
+
+  <div class="tool-card" style="opacity:0.45;">
+    <div class="icon">&#128221;</div>
+    <h2>Medication Log</h2>
+    <div class="desc">Track medication doses, timing, and adherence. Visual calendar view with streak tracking.</div>
+    <div class="meta">
+      <span class="category">Tracking</span>
+      <span class="tag tag-planned">Planned</span>
+    </div>
+  </div>
+
+  <div class="tool-card" style="opacity:0.45;">
+    <div class="icon">&#128200;</div>
+    <h2>Decay Visualizer</h2>
+    <div class="desc">Visualize supplement/medication half-life decay curves. See blood concentration over time after dosing.</div>
+    <div class="meta">
+      <span class="category">Reference</span>
+      <span class="tag tag-planned">Planned</span>
+    </div>
+  </div>
+
+</div>
+
+<div class="footer">
+  Health & Longevity OS &middot; All tools run locally in your browser &middot; No data leaves your device
+</div>
+
+</body>
+</html>

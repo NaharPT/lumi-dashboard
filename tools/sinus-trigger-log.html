@@ -1,0 +1,777 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sinusitis Trigger Log</title>
+<style>
+  :root {
+    --bg: #0f172a;
+    --surface: #1e293b;
+    --surface2: #334155;
+    --border: #475569;
+    --text: #e2e8f0;
+    --text-muted: #94a3b8;
+    --accent: #38bdf8;
+    --accent-dim: #0ea5e9;
+    --danger: #f87171;
+    --warn: #fbbf24;
+    --ok: #4ade80;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    padding: 1.5rem;
+  }
+  h1 { font-size: 1.5rem; margin-bottom: 0.25rem; }
+  .subtitle { color: var(--text-muted); font-size: 0.875rem; margin-bottom: 1.5rem; }
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 0.75rem;
+    padding: 1.25rem;
+    margin-bottom: 1rem;
+  }
+  .card h2 { font-size: 1.1rem; margin-bottom: 1rem; }
+  .card h3 { font-size: 0.95rem; margin-bottom: 0.75rem; color: var(--accent); }
+  label {
+    display: block;
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    margin-bottom: 0.25rem;
+    margin-top: 0.75rem;
+  }
+  label:first-child { margin-top: 0; }
+  input[type="date"], input[type="text"], input[type="number"], textarea, select {
+    width: 100%;
+    padding: 0.5rem 0.75rem;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 0.5rem;
+    color: var(--text);
+    font-size: 0.9rem;
+  }
+  textarea { resize: vertical; min-height: 60px; }
+  input:focus, textarea:focus, select:focus {
+    outline: none;
+    border-color: var(--accent);
+  }
+
+  /* Severity slider */
+  .severity-row {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+  }
+  .severity-row input[type="range"] {
+    flex: 1;
+    accent-color: var(--accent);
+    height: 6px;
+  }
+  .severity-val {
+    font-size: 1.5rem;
+    font-weight: 700;
+    min-width: 2rem;
+    text-align: center;
+  }
+  .severity-1, .severity-2, .severity-3 { color: var(--ok); }
+  .severity-4, .severity-5, .severity-6 { color: var(--warn); }
+  .severity-7, .severity-8, .severity-9, .severity-10 { color: var(--danger); }
+
+  /* Symptom chips */
+  .chips { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-top: 0.4rem; }
+  .chip {
+    padding: 0.3rem 0.7rem;
+    border-radius: 999px;
+    border: 1px solid var(--border);
+    background: var(--surface2);
+    font-size: 0.8rem;
+    cursor: pointer;
+    user-select: none;
+    transition: all 0.15s;
+  }
+  .chip.active {
+    background: var(--accent-dim);
+    border-color: var(--accent);
+    color: #fff;
+  }
+
+  /* Buttons */
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.6rem 1.2rem;
+    border: none;
+    border-radius: 0.5rem;
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .btn-primary {
+    background: var(--accent-dim);
+    color: #fff;
+  }
+  .btn-primary:hover { background: var(--accent); }
+  .btn-danger {
+    background: transparent;
+    color: var(--danger);
+    border: 1px solid var(--danger);
+    padding: 0.3rem 0.6rem;
+    font-size: 0.75rem;
+  }
+  .btn-danger:hover { background: var(--danger); color: #fff; }
+  .btn-small {
+    padding: 0.3rem 0.7rem;
+    font-size: 0.8rem;
+  }
+
+  /* Weather display */
+  .weather-info {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    gap: 0.5rem;
+    margin-top: 0.5rem;
+  }
+  .weather-stat {
+    background: var(--surface2);
+    border-radius: 0.5rem;
+    padding: 0.5rem 0.75rem;
+    text-align: center;
+  }
+  .weather-stat .val { font-size: 1.1rem; font-weight: 700; }
+  .weather-stat .lbl { font-size: 0.7rem; color: var(--text-muted); }
+
+  /* Log entries */
+  .log-entry {
+    background: var(--surface2);
+    border-radius: 0.5rem;
+    padding: 0.75rem 1rem;
+    margin-bottom: 0.5rem;
+    border-left: 4px solid var(--border);
+  }
+  .log-entry.sev-high { border-left-color: var(--danger); }
+  .log-entry.sev-mid { border-left-color: var(--warn); }
+  .log-entry.sev-low { border-left-color: var(--ok); }
+  .log-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.4rem;
+  }
+  .log-date { font-weight: 600; }
+  .log-severity { font-weight: 700; font-size: 0.9rem; }
+  .log-symptoms { font-size: 0.8rem; color: var(--text-muted); }
+  .log-weather { font-size: 0.75rem; color: var(--text-muted); margin-top: 0.3rem; }
+  .log-notes { font-size: 0.85rem; margin-top: 0.3rem; font-style: italic; }
+  .log-actions { margin-top: 0.4rem; display: flex; gap: 0.4rem; }
+
+  /* Correlation panel */
+  .corr-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 0.75rem;
+  }
+  .corr-item {
+    background: var(--surface2);
+    border-radius: 0.5rem;
+    padding: 0.75rem;
+  }
+  .corr-item .factor { font-weight: 600; margin-bottom: 0.25rem; }
+  .corr-item .detail { font-size: 0.8rem; color: var(--text-muted); }
+  .corr-bar {
+    height: 6px;
+    background: var(--border);
+    border-radius: 3px;
+    margin-top: 0.4rem;
+    overflow: hidden;
+  }
+  .corr-bar-fill {
+    height: 100%;
+    border-radius: 3px;
+    transition: width 0.3s;
+  }
+
+  /* Status messages */
+  .status {
+    font-size: 0.8rem;
+    padding: 0.4rem 0.75rem;
+    border-radius: 0.4rem;
+    margin-top: 0.5rem;
+    display: none;
+  }
+  .status.show { display: block; }
+  .status.ok { background: #064e3b; color: var(--ok); }
+  .status.err { background: #450a0a; color: var(--danger); }
+  .status.info { background: #172554; color: var(--accent); }
+
+  .empty-state {
+    text-align: center;
+    color: var(--text-muted);
+    padding: 2rem;
+    font-size: 0.9rem;
+  }
+
+  /* Tabs */
+  .tabs {
+    display: flex;
+    gap: 0.25rem;
+    margin-bottom: 1rem;
+  }
+  .tab {
+    padding: 0.5rem 1rem;
+    border-radius: 0.5rem;
+    background: var(--surface2);
+    border: 1px solid transparent;
+    color: var(--text-muted);
+    cursor: pointer;
+    font-size: 0.85rem;
+    font-weight: 500;
+  }
+  .tab.active {
+    background: var(--accent-dim);
+    color: #fff;
+    border-color: var(--accent);
+  }
+
+  .hidden { display: none !important; }
+
+  /* Location display */
+  .location-bar {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    margin-bottom: 0.5rem;
+  }
+  .location-bar input {
+    max-width: 200px;
+  }
+</style>
+</head>
+<body>
+
+<h1>Sinusitis Trigger Log</h1>
+<p class="subtitle">Track sinus episodes and find weather/pollen correlations</p>
+
+<div class="tabs">
+  <div class="tab active" data-tab="log" onclick="switchTab('log')">Log Entry</div>
+  <div class="tab" data-tab="history" onclick="switchTab('history')">History</div>
+  <div class="tab" data-tab="insights" onclick="switchTab('insights')">Insights</div>
+  <div class="tab" data-tab="settings" onclick="switchTab('settings')">Settings</div>
+</div>
+
+<!-- LOG ENTRY TAB -->
+<div id="tab-log">
+  <div class="card">
+    <h2 id="card-title">Bad Sinus Day</h2>
+
+    <label>Date</label>
+    <input type="date" id="entry-date">
+
+    <label>Severity</label>
+    <div class="severity-row">
+      <input type="range" id="severity" min="1" max="10" value="6" oninput="updateSeverity()" onchange="updateSeverity()">
+      <span class="severity-val severity-6" id="severity-val">6</span>
+    </div>
+
+    <label>Symptoms</label>
+    <div class="chips" id="symptom-chips"></div>
+
+    <label>Custom location (leave blank for auto-detect)</label>
+    <input type="text" id="location-override" placeholder="e.g. Darmstadt, DE">
+
+    <label>Notes</label>
+    <textarea id="notes" placeholder="What did you notice? Any specific triggers?"></textarea>
+
+    <div id="weather-preview" class="hidden" style="margin-top:1rem">
+      <h3>Weather at time of entry</h3>
+      <div class="weather-info" id="weather-data"></div>
+    </div>
+
+    <div id="entry-status" class="status"></div>
+
+    <div style="margin-top:1rem; display:flex; gap:0.5rem;">
+      <button class="btn btn-primary" onclick="saveEntry()">Save Entry</button>
+      <button class="btn btn-small" style="background:var(--surface2); color:var(--text-muted);" onclick="fetchWeatherPreview()">Fetch Weather</button>
+    </div>
+  </div>
+</div>
+
+<!-- HISTORY TAB -->
+<div id="tab-history" class="hidden">
+  <div class="card">
+    <h2>Log History</h2>
+    <div id="history-list"></div>
+  </div>
+</div>
+
+<!-- INSIGHTS TAB -->
+<div id="tab-insights" class="hidden">
+  <div class="card">
+    <h2>Patterns &amp; Correlations</h2>
+    <p class="subtitle" style="margin-bottom:1rem">Based on your logged entries and weather data</p>
+    <div id="insights-content"></div>
+  </div>
+</div>
+
+<!-- SETTINGS TAB -->
+<div id="tab-settings" class="hidden">
+  <div class="card">
+    <h2>Settings</h2>
+
+    <label>OpenWeatherMap API Key</label>
+    <input type="text" id="api-key" placeholder="Your API key">
+    <div style="margin-top:0.5rem">
+      <button class="btn btn-small btn-primary" onclick="saveApiKey()">Save Key</button>
+    </div>
+
+    <label>Default Location</label>
+    <input type="text" id="default-location" placeholder="e.g. Darmstadt, DE">
+    <div style="margin-top:0.5rem">
+      <button class="btn btn-small btn-primary" onclick="saveLocation()">Save Location</button>
+    </div>
+
+    <div id="settings-status" class="status"></div>
+
+    <hr style="border-color:var(--border); margin:1.5rem 0;">
+
+    <h3 style="color:var(--danger);">Data Management</h3>
+    <div style="margin-top:0.5rem; display:flex; gap:0.5rem; flex-wrap:wrap;">
+      <button class="btn btn-small btn-primary" onclick="exportData()">Export JSON</button>
+      <label class="btn btn-small" style="background:var(--surface2); color:var(--text-muted); cursor:pointer;">
+        Import JSON
+        <input type="file" accept=".json" style="display:none" onchange="importData(event)">
+      </label>
+      <button class="btn btn-small btn-danger" onclick="clearAllData()">Clear All Data</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const STORAGE_KEY = 'sinusLog';
+const API_KEY_STORAGE = 'sinusLogApiKey';
+const LOCATION_STORAGE = 'sinusLogLocation';
+const DEFAULT_API_KEY = '878622153baea4ebac5915c19819f8e6';
+
+const SYMPTOMS = [
+  'Congestion', 'Facial pressure', 'Headache', 'Post-nasal drip',
+  'Runny nose', 'Loss of smell', 'Ear pressure', 'Fatigue',
+  'Sneezing', 'Itchy eyes', 'Sore throat', 'Cough',
+  'Jaw/tooth pain', 'Fever', 'Brain fog'
+];
+
+let entries = [];
+let selectedSymptoms = new Set();
+let currentWeather = null;
+
+// --- Init ---
+function init() {
+  // Ensure API key is saved
+  if (!localStorage.getItem(API_KEY_STORAGE)) {
+    localStorage.setItem(API_KEY_STORAGE, DEFAULT_API_KEY);
+  }
+
+  entries = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+  document.getElementById('entry-date').value = todayStr();
+  document.getElementById('api-key').value = getApiKey();
+  document.getElementById('default-location').value = localStorage.getItem(LOCATION_STORAGE) || '';
+  renderSymptomChips();
+  updateSeverity();
+}
+
+function getApiKey() {
+  return localStorage.getItem(API_KEY_STORAGE) || DEFAULT_API_KEY;
+}
+
+function todayStr() {
+  return new Date().toISOString().slice(0, 10);
+}
+
+// --- Tabs ---
+function switchTab(name) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.dataset.tab === name));
+  ['log', 'history', 'insights', 'settings'].forEach(t => {
+    document.getElementById('tab-' + t).classList.toggle('hidden', t !== name);
+  });
+  if (name === 'history') renderHistory();
+  if (name === 'insights') renderInsights();
+}
+
+// --- Symptoms ---
+function renderSymptomChips() {
+  const el = document.getElementById('symptom-chips');
+  el.innerHTML = SYMPTOMS.map(s =>
+    `<span class="chip${selectedSymptoms.has(s) ? ' active' : ''}" onclick="toggleSymptom('${s}')">${s}</span>`
+  ).join('');
+}
+
+function toggleSymptom(s) {
+  selectedSymptoms.has(s) ? selectedSymptoms.delete(s) : selectedSymptoms.add(s);
+  renderSymptomChips();
+}
+
+// --- Severity ---
+function updateSeverity() {
+  const v = parseInt(document.getElementById('severity').value);
+  const el = document.getElementById('severity-val');
+  el.textContent = v;
+  el.className = 'severity-val severity-' + v;
+  const title = document.getElementById('card-title');
+  if (v <= 3) title.textContent = 'Mild Sinus Day';
+  else if (v <= 5) title.textContent = 'Moderate Sinus Day';
+  else if (v <= 7) title.textContent = 'Bad Sinus Day';
+  else title.textContent = 'Severe Sinus Day';
+}
+
+// --- Weather ---
+async function fetchWeather(location) {
+  const key = getApiKey();
+  if (!key) throw new Error('No API key configured');
+
+  let url;
+  if (location) {
+    url = `https://api.openweathermap.org/data/2.5/weather?q=${encodeURIComponent(location)}&appid=${key}&units=metric`;
+  } else {
+    // Try geolocation
+    const pos = await new Promise((resolve, reject) => {
+      navigator.geolocation.getCurrentPosition(resolve, reject, { timeout: 10000 });
+    });
+    url = `https://api.openweathermap.org/data/2.5/weather?lat=${pos.coords.latitude}&lon=${pos.coords.longitude}&appid=${key}&units=metric`;
+  }
+
+  const resp = await fetch(url);
+  if (!resp.ok) {
+    const err = await resp.json().catch(() => ({}));
+    throw new Error(err.message || `Weather API error ${resp.status}`);
+  }
+  return await resp.json();
+}
+
+async function fetchWeatherPreview() {
+  const loc = document.getElementById('location-override').value || localStorage.getItem(LOCATION_STORAGE) || '';
+  const statusEl = document.getElementById('entry-status');
+  try {
+    showStatus(statusEl, 'Fetching weather...', 'info');
+    const data = await fetchWeather(loc);
+    currentWeather = {
+      temp: Math.round(data.main.temp),
+      humidity: data.main.humidity,
+      pressure: data.main.pressure,
+      wind: Math.round(data.wind.speed * 10) / 10,
+      description: data.weather[0].description,
+      city: data.name,
+      clouds: data.clouds.all
+    };
+    renderWeatherPreview();
+    showStatus(statusEl, `Weather loaded for ${data.name}`, 'ok');
+  } catch (e) {
+    showStatus(statusEl, `Weather error: ${e.message}`, 'err');
+  }
+}
+
+function renderWeatherPreview() {
+  if (!currentWeather) return;
+  const el = document.getElementById('weather-data');
+  document.getElementById('weather-preview').classList.remove('hidden');
+  el.innerHTML = `
+    <div class="weather-stat"><div class="val">${currentWeather.temp}&#176;C</div><div class="lbl">Temperature</div></div>
+    <div class="weather-stat"><div class="val">${currentWeather.humidity}%</div><div class="lbl">Humidity</div></div>
+    <div class="weather-stat"><div class="val">${currentWeather.pressure} hPa</div><div class="lbl">Pressure</div></div>
+    <div class="weather-stat"><div class="val">${currentWeather.wind} m/s</div><div class="lbl">Wind</div></div>
+    <div class="weather-stat"><div class="val">${currentWeather.clouds}%</div><div class="lbl">Cloud cover</div></div>
+    <div class="weather-stat"><div class="val">${currentWeather.description}</div><div class="lbl">${currentWeather.city}</div></div>
+  `;
+}
+
+// --- Save Entry ---
+async function saveEntry() {
+  const statusEl = document.getElementById('entry-status');
+  const date = document.getElementById('entry-date').value;
+  const severity = parseInt(document.getElementById('severity').value);
+  const notes = document.getElementById('notes').value.trim();
+  const symptoms = [...selectedSymptoms];
+
+  if (!date) { showStatus(statusEl, 'Please select a date', 'err'); return; }
+  if (symptoms.length === 0) { showStatus(statusEl, 'Please select at least one symptom', 'err'); return; }
+
+  // Fetch weather if not already loaded
+  if (!currentWeather) {
+    try {
+      const loc = document.getElementById('location-override').value || localStorage.getItem(LOCATION_STORAGE) || '';
+      showStatus(statusEl, 'Fetching weather...', 'info');
+      const data = await fetchWeather(loc);
+      currentWeather = {
+        temp: Math.round(data.main.temp),
+        humidity: data.main.humidity,
+        pressure: data.main.pressure,
+        wind: Math.round(data.wind.speed * 10) / 10,
+        description: data.weather[0].description,
+        city: data.name,
+        clouds: data.clouds.all
+      };
+    } catch (e) {
+      // Save without weather if it fails
+      currentWeather = null;
+    }
+  }
+
+  const entry = {
+    id: 'e' + Date.now(),
+    date,
+    severity,
+    symptoms,
+    notes,
+    weather: currentWeather,
+    created: new Date().toISOString()
+  };
+
+  entries.push(entry);
+  entries.sort((a, b) => b.date.localeCompare(a.date));
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(entries));
+
+  // Reset form
+  selectedSymptoms.clear();
+  renderSymptomChips();
+  document.getElementById('notes').value = '';
+  document.getElementById('severity').value = 6;
+  updateSeverity();
+  currentWeather = null;
+  document.getElementById('weather-preview').classList.add('hidden');
+  document.getElementById('entry-date').value = todayStr();
+
+  showStatus(statusEl, 'Entry saved!', 'ok');
+}
+
+// --- History ---
+function renderHistory() {
+  const el = document.getElementById('history-list');
+  if (entries.length === 0) {
+    el.innerHTML = '<div class="empty-state">No entries yet. Log your first bad sinus day!</div>';
+    return;
+  }
+  el.innerHTML = entries.map(e => {
+    const sevClass = e.severity >= 7 ? 'sev-high' : e.severity >= 4 ? 'sev-mid' : 'sev-low';
+    const sevColor = e.severity >= 7 ? 'var(--danger)' : e.severity >= 4 ? 'var(--warn)' : 'var(--ok)';
+    const weatherStr = e.weather
+      ? `${e.weather.temp}C | ${e.weather.humidity}% hum | ${e.weather.pressure} hPa | ${e.weather.description} (${e.weather.city})`
+      : 'No weather data';
+    return `
+      <div class="log-entry ${sevClass}">
+        <div class="log-header">
+          <span class="log-date">${formatDate(e.date)}</span>
+          <span class="log-severity" style="color:${sevColor}">${e.severity}/10</span>
+        </div>
+        <div class="log-symptoms">${e.symptoms.join(' / ')}</div>
+        <div class="log-weather">${weatherStr}</div>
+        ${e.notes ? `<div class="log-notes">"${e.notes}"</div>` : ''}
+        <div class="log-actions">
+          <button class="btn btn-danger" data-delete-id="${e.id}">Delete</button>
+        </div>
+      </div>`;
+  }).join('');
+  // Bind delete buttons via event delegation
+  el.querySelectorAll('[data-delete-id]').forEach(btn => {
+    btn.addEventListener('click', function() {
+      const id = this.getAttribute('data-delete-id');
+      if (confirm('Delete this entry?')) {
+        deleteEntry(id);
+      }
+    });
+  });
+}
+
+function deleteEntry(id) {
+  entries = entries.filter(e => String(e.id) !== String(id));
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(entries));
+  renderHistory();
+}
+
+function formatDate(d) {
+  const dt = new Date(d + 'T00:00:00');
+  return dt.toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' });
+}
+
+// --- Insights ---
+function renderInsights() {
+  const el = document.getElementById('insights-content');
+  const withWeather = entries.filter(e => e.weather);
+
+  if (entries.length < 3) {
+    el.innerHTML = '<div class="empty-state">Log at least 3 entries to see patterns.</div>';
+    return;
+  }
+
+  let html = '';
+
+  // Average severity
+  const avgSev = (entries.reduce((s, e) => s + e.severity, 0) / entries.length).toFixed(1);
+  html += `<p style="margin-bottom:1rem;">Total entries: <strong>${entries.length}</strong> | Avg severity: <strong>${avgSev}/10</strong></p>`;
+
+  // Most common symptoms
+  const symptomCounts = {};
+  entries.forEach(e => e.symptoms.forEach(s => { symptomCounts[s] = (symptomCounts[s] || 0) + 1; }));
+  const topSymptoms = Object.entries(symptomCounts).sort((a, b) => b[1] - a[1]).slice(0, 5);
+
+  html += '<h3 style="margin-bottom:0.5rem;">Top Symptoms</h3><div class="corr-grid" style="margin-bottom:1.25rem;">';
+  topSymptoms.forEach(([name, count]) => {
+    const pct = Math.round(count / entries.length * 100);
+    html += `
+      <div class="corr-item">
+        <div class="factor">${name}</div>
+        <div class="detail">${count} episodes (${pct}%)</div>
+        <div class="corr-bar"><div class="corr-bar-fill" style="width:${pct}%; background:var(--accent);"></div></div>
+      </div>`;
+  });
+  html += '</div>';
+
+  // Weather correlations
+  if (withWeather.length >= 3) {
+    html += '<h3 style="margin-bottom:0.5rem;">Weather Conditions During Episodes</h3>';
+
+    const temps = withWeather.map(e => e.weather.temp);
+    const humids = withWeather.map(e => e.weather.humidity);
+    const pressures = withWeather.map(e => e.weather.pressure);
+
+    const avg = arr => (arr.reduce((a, b) => a + b, 0) / arr.length).toFixed(1);
+    const min = arr => Math.min(...arr);
+    const max = arr => Math.max(...arr);
+
+    html += '<div class="corr-grid" style="margin-bottom:1.25rem;">';
+    html += `
+      <div class="corr-item">
+        <div class="factor">Temperature</div>
+        <div class="detail">Avg: ${avg(temps)}C (${min(temps)} - ${max(temps)}C)</div>
+      </div>
+      <div class="corr-item">
+        <div class="factor">Humidity</div>
+        <div class="detail">Avg: ${avg(humids)}% (${min(humids)} - ${max(humids)}%)</div>
+      </div>
+      <div class="corr-item">
+        <div class="factor">Pressure</div>
+        <div class="detail">Avg: ${avg(pressures)} hPa (${min(pressures)} - ${max(pressures)})</div>
+      </div>`;
+    html += '</div>';
+
+    // High-severity weather patterns
+    const highSev = withWeather.filter(e => e.severity >= 7);
+    if (highSev.length >= 2) {
+      const hTemps = highSev.map(e => e.weather.temp);
+      const hHumids = highSev.map(e => e.weather.humidity);
+      const hPressures = highSev.map(e => e.weather.pressure);
+      html += '<h3 style="margin-bottom:0.5rem;">Weather During Severe Episodes (7+)</h3>';
+      html += '<div class="corr-grid" style="margin-bottom:1.25rem;">';
+      html += `
+        <div class="corr-item">
+          <div class="factor">Temperature</div>
+          <div class="detail">Avg: ${avg(hTemps)}C</div>
+        </div>
+        <div class="corr-item">
+          <div class="factor">Humidity</div>
+          <div class="detail">Avg: ${avg(hHumids)}%</div>
+        </div>
+        <div class="corr-item">
+          <div class="factor">Pressure</div>
+          <div class="detail">Avg: ${avg(hPressures)} hPa</div>
+        </div>`;
+      html += '</div>';
+    }
+
+    // Day of week pattern
+    const dowCounts = [0,0,0,0,0,0,0];
+    const dowNames = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+    entries.forEach(e => {
+      const d = new Date(e.date + 'T00:00:00').getDay();
+      dowCounts[d]++;
+    });
+    const maxDow = Math.max(...dowCounts);
+    if (maxDow > 0) {
+      html += '<h3 style="margin-bottom:0.5rem;">Day of Week Pattern</h3><div class="corr-grid" style="margin-bottom:1.25rem;">';
+      dowNames.forEach((name, i) => {
+        const pct = Math.round(dowCounts[i] / maxDow * 100);
+        html += `
+          <div class="corr-item">
+            <div class="factor">${name}</div>
+            <div class="detail">${dowCounts[i]} episodes</div>
+            <div class="corr-bar"><div class="corr-bar-fill" style="width:${pct}%; background:var(--accent);"></div></div>
+          </div>`;
+      });
+      html += '</div>';
+    }
+  } else {
+    html += '<div class="empty-state" style="padding:1rem;">Not enough entries with weather data for correlations.</div>';
+  }
+
+  el.innerHTML = html;
+}
+
+// --- Settings ---
+function saveApiKey() {
+  const key = document.getElementById('api-key').value.trim();
+  if (key) {
+    localStorage.setItem(API_KEY_STORAGE, key);
+    showStatus(document.getElementById('settings-status'), 'API key saved', 'ok');
+  }
+}
+
+function saveLocation() {
+  const loc = document.getElementById('default-location').value.trim();
+  localStorage.setItem(LOCATION_STORAGE, loc);
+  showStatus(document.getElementById('settings-status'), 'Location saved', 'ok');
+}
+
+// --- Data management ---
+function exportData() {
+  const data = { entries, exportDate: new Date().toISOString() };
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `sinus-log-${todayStr()}.json`;
+  a.click();
+}
+
+function importData(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    try {
+      const data = JSON.parse(e.target.result);
+      if (data.entries && Array.isArray(data.entries)) {
+        entries = data.entries;
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(entries));
+        alert(`Imported ${entries.length} entries`);
+      } else {
+        alert('Invalid file format');
+      }
+    } catch { alert('Failed to parse file'); }
+  };
+  reader.readAsText(file);
+}
+
+function clearAllData() {
+  if (!confirm('Delete ALL entries? This cannot be undone.')) return;
+  if (!confirm('Are you sure?')) return;
+  entries = [];
+  localStorage.setItem(STORAGE_KEY, '[]');
+  renderHistory();
+  alert('All data cleared');
+}
+
+// --- Utils ---
+function showStatus(el, msg, type) {
+  el.textContent = msg;
+  el.className = `status show ${type}`;
+  if (type !== 'info') setTimeout(() => el.classList.remove('show'), 4000);
+}
+
+// Boot
+init();
+</script>
+</body>
+</html>

@@ -1,0 +1,751 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Health Unit Converter</title>
+    <style>
+        :root {
+            --bg: #0f172a;
+            --surface: #1e293b;
+            --surface2: #334155;
+            --border: #475569;
+            --text: #e2e8f0;
+            --text-muted: #94a3b8;
+            --accent: #38bdf8;
+            --danger: #f87171;
+            --warn: #fbbf24;
+            --ok: #4ade80;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            padding: 2rem;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 3rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
+            color: var(--accent);
+        }
+
+        .subtitle {
+            color: var(--text-muted);
+            font-size: 1.1rem;
+        }
+
+        .converters-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .converter-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 0.75rem;
+            padding: 1.5rem;
+        }
+
+        .converter-title {
+            font-size: 1.25rem;
+            margin-bottom: 0.5rem;
+            color: var(--accent);
+        }
+
+        .converter-factor {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 1rem;
+        }
+
+        .input-group {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .input-wrapper {
+            flex: 1;
+            position: relative;
+        }
+
+        input[type="number"],
+        input[type="text"] {
+            width: 100%;
+            padding: 0.75rem;
+            background: var(--surface2);
+            border: 1px solid var(--border);
+            border-radius: 0.5rem;
+            color: var(--text);
+            font-size: 1rem;
+        }
+
+        input[type="number"]:focus,
+        input[type="text"]:focus {
+            outline: none;
+            border-color: var(--accent);
+        }
+
+        .unit-label {
+            position: absolute;
+            right: 0.75rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-muted);
+            font-size: 0.875rem;
+            pointer-events: none;
+        }
+
+        .arrow {
+            color: var(--text-muted);
+            font-size: 1.5rem;
+        }
+
+        .reference-range {
+            background: var(--surface2);
+            border-radius: 0.5rem;
+            padding: 0.75rem;
+            margin-top: 1rem;
+            font-size: 0.875rem;
+        }
+
+        .range-title {
+            color: var(--text-muted);
+            margin-bottom: 0.25rem;
+        }
+
+        .range-value {
+            color: var(--text);
+        }
+
+        .status-indicator {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            margin-right: 0.5rem;
+        }
+
+        .status-normal {
+            background: var(--ok);
+        }
+
+        .status-warning {
+            background: var(--warn);
+        }
+
+        .status-danger {
+            background: var(--danger);
+        }
+
+        .result-display {
+            background: var(--surface2);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-top: 1rem;
+        }
+
+        .result-label {
+            color: var(--text-muted);
+            font-size: 0.875rem;
+            margin-bottom: 0.25rem;
+        }
+
+        .result-value {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: var(--text);
+        }
+
+        .height-inputs {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .height-inputs input {
+            flex: 1;
+        }
+
+        .bp-inputs {
+            display: grid;
+            grid-template-columns: 1fr auto 1fr;
+            gap: 0.5rem;
+            align-items: center;
+        }
+
+        .bp-separator {
+            color: var(--text-muted);
+            font-size: 1.5rem;
+        }
+
+        .bmi-inputs {
+            display: grid;
+            gap: 1rem;
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .converters-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Health Unit Converter</h1>
+            <p class="subtitle">Medical & Biometric Conversions</p>
+        </header>
+
+        <div class="converters-grid">
+            <!-- Blood Sugar -->
+            <div class="converter-card">
+                <h3 class="converter-title">Blood Sugar (Glucose)</h3>
+                <p class="converter-factor">1 mmol/L = 18.018 mg/dL</p>
+                <div class="input-group">
+                    <div class="input-wrapper">
+                        <input type="number" id="glucose-mgdl" step="0.1" placeholder="Enter value">
+                        <span class="unit-label">mg/dL</span>
+                    </div>
+                    <span class="arrow">↔</span>
+                    <div class="input-wrapper">
+                        <input type="number" id="glucose-mmol" step="0.01" placeholder="Enter value">
+                        <span class="unit-label">mmol/L</span>
+                    </div>
+                </div>
+                <div class="reference-range" id="glucose-range"></div>
+            </div>
+
+            <!-- Cholesterol -->
+            <div class="converter-card">
+                <h3 class="converter-title">Total Cholesterol</h3>
+                <p class="converter-factor">1 mmol/L = 38.67 mg/dL</p>
+                <div class="input-group">
+                    <div class="input-wrapper">
+                        <input type="number" id="chol-mgdl" step="0.1" placeholder="Enter value">
+                        <span class="unit-label">mg/dL</span>
+                    </div>
+                    <span class="arrow">↔</span>
+                    <div class="input-wrapper">
+                        <input type="number" id="chol-mmol" step="0.01" placeholder="Enter value">
+                        <span class="unit-label">mmol/L</span>
+                    </div>
+                </div>
+                <div class="reference-range" id="chol-range"></div>
+            </div>
+
+            <!-- Triglycerides -->
+            <div class="converter-card">
+                <h3 class="converter-title">Triglycerides</h3>
+                <p class="converter-factor">1 mmol/L = 88.57 mg/dL</p>
+                <div class="input-group">
+                    <div class="input-wrapper">
+                        <input type="number" id="trig-mgdl" step="0.1" placeholder="Enter value">
+                        <span class="unit-label">mg/dL</span>
+                    </div>
+                    <span class="arrow">↔</span>
+                    <div class="input-wrapper">
+                        <input type="number" id="trig-mmol" step="0.01" placeholder="Enter value">
+                        <span class="unit-label">mmol/L</span>
+                    </div>
+                </div>
+                <div class="reference-range" id="trig-range"></div>
+            </div>
+
+            <!-- Weight -->
+            <div class="converter-card">
+                <h3 class="converter-title">Weight</h3>
+                <p class="converter-factor">1 kg = 2.20462 lbs</p>
+                <div class="input-group">
+                    <div class="input-wrapper">
+                        <input type="number" id="weight-kg" step="0.1" placeholder="Enter value">
+                        <span class="unit-label">kg</span>
+                    </div>
+                    <span class="arrow">↔</span>
+                    <div class="input-wrapper">
+                        <input type="number" id="weight-lbs" step="0.1" placeholder="Enter value">
+                        <span class="unit-label">lbs</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Height -->
+            <div class="converter-card">
+                <h3 class="converter-title">Height</h3>
+                <p class="converter-factor">1 cm = 0.3937 inches</p>
+                <div class="input-group">
+                    <div class="input-wrapper">
+                        <input type="number" id="height-cm" step="0.1" placeholder="Enter value">
+                        <span class="unit-label">cm</span>
+                    </div>
+                    <span class="arrow">↔</span>
+                    <div class="input-wrapper height-inputs">
+                        <input type="number" id="height-ft" step="1" placeholder="ft">
+                        <input type="number" id="height-in" step="0.1" placeholder="in">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Temperature -->
+            <div class="converter-card">
+                <h3 class="converter-title">Temperature</h3>
+                <p class="converter-factor">°F = (°C × 9/5) + 32</p>
+                <div class="input-group">
+                    <div class="input-wrapper">
+                        <input type="number" id="temp-c" step="0.1" placeholder="Enter value">
+                        <span class="unit-label">°C</span>
+                    </div>
+                    <span class="arrow">↔</span>
+                    <div class="input-wrapper">
+                        <input type="number" id="temp-f" step="0.1" placeholder="Enter value">
+                        <span class="unit-label">°F</span>
+                    </div>
+                </div>
+                <div class="reference-range">
+                    <div class="range-title">Normal body temperature:</div>
+                    <div class="range-value">36.5-37.5°C (97.7-99.5°F)</div>
+                </div>
+            </div>
+
+            <!-- Blood Pressure -->
+            <div class="converter-card">
+                <h3 class="converter-title">Blood Pressure</h3>
+                <p class="converter-factor">Systolic / Diastolic (mmHg)</p>
+                <div class="bp-inputs">
+                    <div class="input-wrapper">
+                        <input type="number" id="bp-systolic" placeholder="Systolic">
+                        <span class="unit-label">mmHg</span>
+                    </div>
+                    <span class="bp-separator">/</span>
+                    <div class="input-wrapper">
+                        <input type="number" id="bp-diastolic" placeholder="Diastolic">
+                        <span class="unit-label">mmHg</span>
+                    </div>
+                </div>
+                <div class="reference-range" id="bp-classification"></div>
+            </div>
+
+            <!-- BMI Calculator -->
+            <div class="converter-card">
+                <h3 class="converter-title">BMI Calculator</h3>
+                <p class="converter-factor">BMI = weight(kg) / height(m)²</p>
+                <div class="bmi-inputs">
+                    <div class="input-wrapper">
+                        <input type="number" id="bmi-weight" step="0.1" placeholder="Enter weight">
+                        <span class="unit-label">kg</span>
+                    </div>
+                    <div class="input-wrapper">
+                        <input type="number" id="bmi-height" step="0.1" placeholder="Enter height">
+                        <span class="unit-label">cm</span>
+                    </div>
+                </div>
+                <div class="result-display" id="bmi-result" style="display: none;">
+                    <div class="result-label">BMI</div>
+                    <div class="result-value" id="bmi-value"></div>
+                    <div class="range-value" id="bmi-category"></div>
+                </div>
+            </div>
+
+            <!-- Creatinine -->
+            <div class="converter-card">
+                <h3 class="converter-title">Creatinine</h3>
+                <p class="converter-factor">1 mg/dL = 88.42 µmol/L</p>
+                <div class="input-group">
+                    <div class="input-wrapper">
+                        <input type="number" id="creat-mgdl" step="0.01" placeholder="Enter value">
+                        <span class="unit-label">mg/dL</span>
+                    </div>
+                    <span class="arrow">↔</span>
+                    <div class="input-wrapper">
+                        <input type="number" id="creat-umol" step="0.1" placeholder="Enter value">
+                        <span class="unit-label">µmol/L</span>
+                    </div>
+                </div>
+                <div class="reference-range" id="creat-range"></div>
+            </div>
+
+            <!-- Hemoglobin -->
+            <div class="converter-card">
+                <h3 class="converter-title">Hemoglobin</h3>
+                <p class="converter-factor">1 g/dL = 10 g/L</p>
+                <div class="input-group">
+                    <div class="input-wrapper">
+                        <input type="number" id="hgb-gdl" step="0.1" placeholder="Enter value">
+                        <span class="unit-label">g/dL</span>
+                    </div>
+                    <span class="arrow">↔</span>
+                    <div class="input-wrapper">
+                        <input type="number" id="hgb-gl" step="1" placeholder="Enter value">
+                        <span class="unit-label">g/L</span>
+                    </div>
+                </div>
+                <div class="reference-range" id="hgb-range"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Blood Sugar Converter
+        const glucoseMgdl = document.getElementById('glucose-mgdl');
+        const glucoseMmol = document.getElementById('glucose-mmol');
+        const glucoseRange = document.getElementById('glucose-range');
+
+        glucoseMgdl.addEventListener('input', () => {
+            const value = parseFloat(glucoseMgdl.value);
+            if (!isNaN(value)) {
+                glucoseMmol.value = (value / 18.018).toFixed(2);
+                updateGlucoseRange(value);
+            }
+        });
+
+        glucoseMmol.addEventListener('input', () => {
+            const value = parseFloat(glucoseMmol.value);
+            if (!isNaN(value)) {
+                glucoseMgdl.value = (value * 18.018).toFixed(1);
+                updateGlucoseRange(value * 18.018);
+            }
+        });
+
+        function updateGlucoseRange(mgdl) {
+            let status = '';
+            let className = '';
+            if (mgdl < 70) {
+                status = 'Low (Hypoglycemia)';
+                className = 'status-danger';
+            } else if (mgdl >= 70 && mgdl <= 99) {
+                status = 'Normal (Fasting)';
+                className = 'status-normal';
+            } else if (mgdl >= 100 && mgdl <= 125) {
+                status = 'Prediabetes';
+                className = 'status-warning';
+            } else {
+                status = 'Diabetes Range';
+                className = 'status-danger';
+            }
+            glucoseRange.innerHTML = `
+                <div class="range-title">Status:</div>
+                <div class="range-value"><span class="status-indicator ${className}"></span>${status}</div>
+                <div class="range-title" style="margin-top: 0.5rem;">Normal fasting: 70-99 mg/dL (3.9-5.5 mmol/L)</div>
+            `;
+        }
+
+        // Cholesterol Converter
+        const cholMgdl = document.getElementById('chol-mgdl');
+        const cholMmol = document.getElementById('chol-mmol');
+        const cholRange = document.getElementById('chol-range');
+
+        cholMgdl.addEventListener('input', () => {
+            const value = parseFloat(cholMgdl.value);
+            if (!isNaN(value)) {
+                cholMmol.value = (value / 38.67).toFixed(2);
+                updateCholRange(value);
+            }
+        });
+
+        cholMmol.addEventListener('input', () => {
+            const value = parseFloat(cholMmol.value);
+            if (!isNaN(value)) {
+                cholMgdl.value = (value * 38.67).toFixed(1);
+                updateCholRange(value * 38.67);
+            }
+        });
+
+        function updateCholRange(mgdl) {
+            let status = '';
+            let className = '';
+            if (mgdl < 200) {
+                status = 'Desirable';
+                className = 'status-normal';
+            } else if (mgdl >= 200 && mgdl < 240) {
+                status = 'Borderline High';
+                className = 'status-warning';
+            } else {
+                status = 'High';
+                className = 'status-danger';
+            }
+            cholRange.innerHTML = `
+                <div class="range-title">Status:</div>
+                <div class="range-value"><span class="status-indicator ${className}"></span>${status}</div>
+                <div class="range-title" style="margin-top: 0.5rem;">Desirable: <200 mg/dL (<5.2 mmol/L)</div>
+            `;
+        }
+
+        // Triglycerides Converter
+        const trigMgdl = document.getElementById('trig-mgdl');
+        const trigMmol = document.getElementById('trig-mmol');
+        const trigRange = document.getElementById('trig-range');
+
+        trigMgdl.addEventListener('input', () => {
+            const value = parseFloat(trigMgdl.value);
+            if (!isNaN(value)) {
+                trigMmol.value = (value / 88.57).toFixed(2);
+                updateTrigRange(value);
+            }
+        });
+
+        trigMmol.addEventListener('input', () => {
+            const value = parseFloat(trigMmol.value);
+            if (!isNaN(value)) {
+                trigMgdl.value = (value * 88.57).toFixed(1);
+                updateTrigRange(value * 88.57);
+            }
+        });
+
+        function updateTrigRange(mgdl) {
+            let status = '';
+            let className = '';
+            if (mgdl < 150) {
+                status = 'Normal';
+                className = 'status-normal';
+            } else if (mgdl >= 150 && mgdl < 200) {
+                status = 'Borderline High';
+                className = 'status-warning';
+            } else if (mgdl >= 200 && mgdl < 500) {
+                status = 'High';
+                className = 'status-danger';
+            } else {
+                status = 'Very High';
+                className = 'status-danger';
+            }
+            trigRange.innerHTML = `
+                <div class="range-title">Status:</div>
+                <div class="range-value"><span class="status-indicator ${className}"></span>${status}</div>
+                <div class="range-title" style="margin-top: 0.5rem;">Normal: <150 mg/dL (<1.7 mmol/L)</div>
+            `;
+        }
+
+        // Weight Converter
+        const weightKg = document.getElementById('weight-kg');
+        const weightLbs = document.getElementById('weight-lbs');
+
+        weightKg.addEventListener('input', () => {
+            const value = parseFloat(weightKg.value);
+            if (!isNaN(value)) {
+                weightLbs.value = (value * 2.20462).toFixed(1);
+            }
+        });
+
+        weightLbs.addEventListener('input', () => {
+            const value = parseFloat(weightLbs.value);
+            if (!isNaN(value)) {
+                weightKg.value = (value / 2.20462).toFixed(1);
+            }
+        });
+
+        // Height Converter
+        const heightCm = document.getElementById('height-cm');
+        const heightFt = document.getElementById('height-ft');
+        const heightIn = document.getElementById('height-in');
+
+        heightCm.addEventListener('input', () => {
+            const value = parseFloat(heightCm.value);
+            if (!isNaN(value)) {
+                const totalInches = value / 2.54;
+                heightFt.value = Math.floor(totalInches / 12);
+                heightIn.value = (totalInches % 12).toFixed(1);
+            }
+        });
+
+        function updateCmFromFeetInches() {
+            const ft = parseFloat(heightFt.value) || 0;
+            const inches = parseFloat(heightIn.value) || 0;
+            const totalInches = (ft * 12) + inches;
+            heightCm.value = (totalInches * 2.54).toFixed(1);
+        }
+
+        heightFt.addEventListener('input', updateCmFromFeetInches);
+        heightIn.addEventListener('input', updateCmFromFeetInches);
+
+        // Temperature Converter
+        const tempC = document.getElementById('temp-c');
+        const tempF = document.getElementById('temp-f');
+
+        tempC.addEventListener('input', () => {
+            const value = parseFloat(tempC.value);
+            if (!isNaN(value)) {
+                tempF.value = ((value * 9/5) + 32).toFixed(1);
+            }
+        });
+
+        tempF.addEventListener('input', () => {
+            const value = parseFloat(tempF.value);
+            if (!isNaN(value)) {
+                tempC.value = ((value - 32) * 5/9).toFixed(1);
+            }
+        });
+
+        // Blood Pressure
+        const bpSystolic = document.getElementById('bp-systolic');
+        const bpDiastolic = document.getElementById('bp-diastolic');
+        const bpClassification = document.getElementById('bp-classification');
+
+        function updateBPClassification() {
+            const sys = parseFloat(bpSystolic.value);
+            const dia = parseFloat(bpDiastolic.value);
+
+            if (isNaN(sys) || isNaN(dia)) return;
+
+            let status = '';
+            let className = '';
+
+            if (sys < 120 && dia < 80) {
+                status = 'Normal';
+                className = 'status-normal';
+            } else if (sys >= 120 && sys < 130 && dia < 80) {
+                status = 'Elevated';
+                className = 'status-warning';
+            } else if ((sys >= 130 && sys < 140) || (dia >= 80 && dia < 90)) {
+                status = 'Stage 1 Hypertension';
+                className = 'status-warning';
+            } else if (sys >= 140 || dia >= 90) {
+                status = 'Stage 2 Hypertension';
+                className = 'status-danger';
+            } else if (sys >= 180 || dia >= 120) {
+                status = 'Hypertensive Crisis';
+                className = 'status-danger';
+            }
+
+            bpClassification.innerHTML = `
+                <div class="range-title">Classification:</div>
+                <div class="range-value"><span class="status-indicator ${className}"></span>${status}</div>
+                <div class="range-title" style="margin-top: 0.5rem;">Normal: <120/80 mmHg</div>
+            `;
+        }
+
+        bpSystolic.addEventListener('input', updateBPClassification);
+        bpDiastolic.addEventListener('input', updateBPClassification);
+
+        // BMI Calculator
+        const bmiWeight = document.getElementById('bmi-weight');
+        const bmiHeight = document.getElementById('bmi-height');
+        const bmiResult = document.getElementById('bmi-result');
+        const bmiValue = document.getElementById('bmi-value');
+        const bmiCategory = document.getElementById('bmi-category');
+
+        function calculateBMI() {
+            const weight = parseFloat(bmiWeight.value);
+            const height = parseFloat(bmiHeight.value);
+
+            if (isNaN(weight) || isNaN(height) || height === 0) {
+                bmiResult.style.display = 'none';
+                return;
+            }
+
+            const heightM = height / 100;
+            const bmi = weight / (heightM * heightM);
+
+            bmiResult.style.display = 'block';
+            bmiValue.textContent = bmi.toFixed(1);
+
+            let category = '';
+            let className = '';
+
+            if (bmi < 18.5) {
+                category = 'Underweight';
+                className = 'status-warning';
+            } else if (bmi >= 18.5 && bmi < 25) {
+                category = 'Normal weight';
+                className = 'status-normal';
+            } else if (bmi >= 25 && bmi < 30) {
+                category = 'Overweight';
+                className = 'status-warning';
+            } else {
+                category = 'Obese';
+                className = 'status-danger';
+            }
+
+            bmiCategory.innerHTML = `<span class="status-indicator ${className}"></span>${category}`;
+        }
+
+        bmiWeight.addEventListener('input', calculateBMI);
+        bmiHeight.addEventListener('input', calculateBMI);
+
+        // Creatinine Converter
+        const creatMgdl = document.getElementById('creat-mgdl');
+        const creatUmol = document.getElementById('creat-umol');
+        const creatRange = document.getElementById('creat-range');
+
+        creatMgdl.addEventListener('input', () => {
+            const value = parseFloat(creatMgdl.value);
+            if (!isNaN(value)) {
+                creatUmol.value = (value * 88.42).toFixed(1);
+                updateCreatRange(value);
+            }
+        });
+
+        creatUmol.addEventListener('input', () => {
+            const value = parseFloat(creatUmol.value);
+            if (!isNaN(value)) {
+                creatMgdl.value = (value / 88.42).toFixed(2);
+                updateCreatRange(value / 88.42);
+            }
+        });
+
+        function updateCreatRange(mgdl) {
+            creatRange.innerHTML = `
+                <div class="range-title">Normal ranges:</div>
+                <div class="range-value">Male: 0.7-1.3 mg/dL (62-115 µmol/L)</div>
+                <div class="range-value">Female: 0.6-1.1 mg/dL (53-97 µmol/L)</div>
+            `;
+        }
+
+        // Hemoglobin Converter
+        const hgbGdl = document.getElementById('hgb-gdl');
+        const hgbGl = document.getElementById('hgb-gl');
+        const hgbRange = document.getElementById('hgb-range');
+
+        hgbGdl.addEventListener('input', () => {
+            const value = parseFloat(hgbGdl.value);
+            if (!isNaN(value)) {
+                hgbGl.value = (value * 10).toFixed(0);
+                updateHgbRange(value);
+            }
+        });
+
+        hgbGl.addEventListener('input', () => {
+            const value = parseFloat(hgbGl.value);
+            if (!isNaN(value)) {
+                hgbGdl.value = (value / 10).toFixed(1);
+                updateHgbRange(value / 10);
+            }
+        });
+
+        function updateHgbRange(gdl) {
+            hgbRange.innerHTML = `
+                <div class="range-title">Normal ranges:</div>
+                <div class="range-value">Male: 13.5-17.5 g/dL (135-175 g/L)</div>
+                <div class="range-value">Female: 12.0-15.5 g/dL (120-155 g/L)</div>
+            `;
+        }
+    </script>
+</body>
+</html>

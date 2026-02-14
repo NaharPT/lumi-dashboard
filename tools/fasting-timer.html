@@ -1,0 +1,668 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fasting Timer - Intermittent Fasting Tracker</title>
+    <style>
+        :root {
+            --bg: #0f172a;
+            --surface: #1e293b;
+            --surface2: #334155;
+            --border: #475569;
+            --text: #e2e8f0;
+            --text-muted: #94a3b8;
+            --accent: #38bdf8;
+            --danger: #f87171;
+            --warn: #fbbf24;
+            --ok: #4ade80;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            padding: 2rem 1rem;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+
+        .subtitle {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+        }
+
+        .card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 0.75rem;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .card-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            color: var(--text);
+        }
+
+        .timer-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 2rem;
+            padding: 1rem 0;
+        }
+
+        .timer-display {
+            position: relative;
+            width: 280px;
+            height: 280px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .progress-ring {
+            position: absolute;
+            top: 0;
+            left: 0;
+            transform: rotate(-90deg);
+        }
+
+        .progress-ring-circle {
+            transition: stroke 0.3s ease, stroke-dashoffset 0.5s ease;
+        }
+
+        .timer-text {
+            text-align: center;
+            z-index: 1;
+        }
+
+        .countdown {
+            font-size: 2.5rem;
+            font-weight: 700;
+            font-variant-numeric: tabular-nums;
+            margin-bottom: 0.5rem;
+        }
+
+        .timer-label {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+        }
+
+        .presets {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+            gap: 0.75rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .preset-btn {
+            background: var(--surface2);
+            border: 1px solid var(--border);
+            color: var(--text);
+            padding: 0.75rem 0.5rem;
+            border-radius: 0.5rem;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            font-weight: 500;
+        }
+
+        .preset-btn:hover {
+            background: var(--border);
+            border-color: var(--accent);
+        }
+
+        .preset-btn.active {
+            background: var(--accent);
+            border-color: var(--accent);
+            color: var(--bg);
+        }
+
+        .control-btn {
+            padding: 1rem 3rem;
+            font-size: 1.1rem;
+            font-weight: 600;
+            border: none;
+            border-radius: 0.75rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-start {
+            background: var(--ok);
+            color: var(--bg);
+        }
+
+        .btn-start:hover {
+            filter: brightness(1.1);
+        }
+
+        .btn-stop {
+            background: var(--danger);
+            color: white;
+        }
+
+        .btn-stop:hover {
+            filter: brightness(1.1);
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 1rem;
+        }
+
+        .stat-box {
+            background: var(--surface2);
+            padding: 1rem;
+            border-radius: 0.5rem;
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: var(--accent);
+            margin-bottom: 0.25rem;
+        }
+
+        .stat-label {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .history-list {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+
+        .history-item {
+            background: var(--surface2);
+            padding: 1rem;
+            border-radius: 0.5rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .history-date {
+            font-size: 0.9rem;
+            color: var(--text-muted);
+        }
+
+        .history-duration {
+            font-weight: 600;
+            color: var(--ok);
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+            font-weight: 500;
+        }
+
+        .badge-eating {
+            background: var(--ok);
+            color: var(--bg);
+        }
+
+        .badge-fasting {
+            background: var(--accent);
+            color: var(--bg);
+        }
+
+        .badge-ending {
+            background: var(--warn);
+            color: var(--bg);
+        }
+
+        .empty-state {
+            text-align: center;
+            color: var(--text-muted);
+            padding: 2rem;
+        }
+
+        @media (max-width: 600px) {
+            .timer-display {
+                width: 240px;
+                height: 240px;
+            }
+
+            .countdown {
+                font-size: 2rem;
+            }
+
+            .presets {
+                grid-template-columns: repeat(3, 1fr);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Fasting Timer</h1>
+            <p class="subtitle">Intermittent Fasting Tracker</p>
+        </header>
+
+        <div class="card">
+            <div class="card-title">Timer</div>
+            <div class="timer-container">
+                <div class="timer-display">
+                    <svg class="progress-ring" width="280" height="280">
+                        <circle
+                            class="progress-ring-bg"
+                            stroke="var(--surface2)"
+                            stroke-width="12"
+                            fill="transparent"
+                            r="130"
+                            cx="140"
+                            cy="140"
+                        />
+                        <circle
+                            class="progress-ring-circle"
+                            stroke="var(--accent)"
+                            stroke-width="12"
+                            fill="transparent"
+                            r="130"
+                            cx="140"
+                            cy="140"
+                            stroke-dasharray="817 817"
+                            stroke-dashoffset="817"
+                            stroke-linecap="round"
+                        />
+                    </svg>
+                    <div class="timer-text">
+                        <div class="countdown" id="countdown">00:00:00</div>
+                        <div class="timer-label" id="timerLabel">Select a preset</div>
+                    </div>
+                </div>
+
+                <div style="width: 100%;">
+                    <div class="presets" id="presets">
+                        <button class="preset-btn" data-hours="16">16:8</button>
+                        <button class="preset-btn" data-hours="18">18:6</button>
+                        <button class="preset-btn" data-hours="20">20:4</button>
+                        <button class="preset-btn" data-hours="23">OMAD</button>
+                        <button class="preset-btn" data-hours="24">24h</button>
+                        <button class="preset-btn" data-hours="36">36h</button>
+                        <button class="preset-btn" data-hours="48">48h</button>
+                    </div>
+                </div>
+
+                <button class="control-btn btn-start" id="controlBtn">Start Fasting</button>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-title">Statistics</div>
+            <div class="stats-grid">
+                <div class="stat-box">
+                    <div class="stat-value" id="statStreak">0</div>
+                    <div class="stat-label">Day Streak</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-value" id="statAverage">0h</div>
+                    <div class="stat-label">Avg Duration</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-value" id="statLongest">0h</div>
+                    <div class="stat-label">Longest Fast</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-value" id="statComplete">0%</div>
+                    <div class="stat-label">Completion</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-title">History (Last 10 Fasts)</div>
+            <div class="history-list" id="historyList">
+                <div class="empty-state">No fasting sessions yet. Start your first fast above!</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        class FastingTimer {
+            constructor() {
+                this.targetHours = null;
+                this.startTime = null;
+                this.endTime = null;
+                this.isRunning = false;
+                this.intervalId = null;
+                this.history = this.loadHistory();
+
+                this.initElements();
+                this.attachEventListeners();
+                this.loadState();
+                this.updateStats();
+                this.renderHistory();
+
+                if (this.isRunning) {
+                    this.startInterval();
+                }
+            }
+
+            initElements() {
+                this.countdownEl = document.getElementById('countdown');
+                this.labelEl = document.getElementById('timerLabel');
+                this.controlBtn = document.getElementById('controlBtn');
+                this.presetsContainer = document.getElementById('presets');
+                this.progressCircle = document.querySelector('.progress-ring-circle');
+                this.historyList = document.getElementById('historyList');
+
+                // Circle circumference: 2 * PI * radius = 2 * 3.14159 * 130 = 817
+                this.circleCircumference = 817;
+            }
+
+            attachEventListeners() {
+                this.presetsContainer.addEventListener('click', (e) => {
+                    if (e.target.classList.contains('preset-btn')) {
+                        const hours = parseInt(e.target.dataset.hours);
+                        this.selectPreset(hours, e.target);
+                    }
+                });
+
+                this.controlBtn.addEventListener('click', () => {
+                    if (this.isRunning) {
+                        this.stopFasting();
+                    } else {
+                        this.startFasting();
+                    }
+                });
+            }
+
+            selectPreset(hours, btnElement) {
+                if (this.isRunning) return;
+
+                this.targetHours = hours;
+
+                // Update active preset button
+                document.querySelectorAll('.preset-btn').forEach(btn => btn.classList.remove('active'));
+                btnElement.classList.add('active');
+
+                this.labelEl.textContent = `${hours}h fast selected`;
+            }
+
+            startFasting() {
+                if (!this.targetHours) {
+                    alert('Please select a fasting duration first');
+                    return;
+                }
+
+                this.startTime = Date.now();
+                this.endTime = this.startTime + (this.targetHours * 60 * 60 * 1000);
+                this.isRunning = true;
+
+                this.controlBtn.textContent = 'Stop Fasting';
+                this.controlBtn.className = 'control-btn btn-stop';
+                this.labelEl.textContent = 'Fasting in progress';
+
+                this.saveState();
+                this.startInterval();
+            }
+
+            stopFasting() {
+                const actualDuration = (Date.now() - this.startTime) / (1000 * 60 * 60);
+                const completed = actualDuration >= this.targetHours;
+
+                this.addToHistory({
+                    date: new Date().toISOString(),
+                    targetHours: this.targetHours,
+                    actualHours: actualDuration,
+                    completed: completed
+                });
+
+                this.reset();
+            }
+
+            startInterval() {
+                this.updateDisplay();
+                this.intervalId = setInterval(() => this.updateDisplay(), 1000);
+            }
+
+            updateDisplay() {
+                if (!this.isRunning) return;
+
+                const now = Date.now();
+                const remaining = Math.max(0, this.endTime - now);
+                const elapsed = now - this.startTime;
+                const totalDuration = this.endTime - this.startTime;
+
+                // Format countdown
+                const hours = Math.floor(remaining / (1000 * 60 * 60));
+                const minutes = Math.floor((remaining % (1000 * 60 * 60)) / (1000 * 60));
+                const seconds = Math.floor((remaining % (1000 * 60)) / 1000);
+
+                this.countdownEl.textContent =
+                    `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+
+                // Update progress ring
+                const progress = Math.min(1, elapsed / totalDuration);
+                const offset = this.circleCircumference * (1 - progress);
+                this.progressCircle.style.strokeDashoffset = offset;
+
+                // Color transitions
+                let color;
+                if (remaining === 0) {
+                    color = 'var(--ok)';
+                    this.labelEl.textContent = 'Fast completed!';
+                    this.completeFast();
+                } else if (remaining < 60 * 60 * 1000) {
+                    color = 'var(--warn)';
+                    this.labelEl.textContent = 'Final hour!';
+                } else {
+                    color = 'var(--accent)';
+                    this.labelEl.textContent = 'Fasting in progress';
+                }
+                this.progressCircle.style.stroke = color;
+            }
+
+            completeFast() {
+                clearInterval(this.intervalId);
+
+                const actualDuration = (Date.now() - this.startTime) / (1000 * 60 * 60);
+                this.addToHistory({
+                    date: new Date().toISOString(),
+                    targetHours: this.targetHours,
+                    actualHours: actualDuration,
+                    completed: true
+                });
+
+                setTimeout(() => this.reset(), 3000);
+            }
+
+            reset() {
+                clearInterval(this.intervalId);
+                this.isRunning = false;
+                this.startTime = null;
+                this.endTime = null;
+
+                this.countdownEl.textContent = '00:00:00';
+                this.labelEl.textContent = 'Select a preset';
+                this.controlBtn.textContent = 'Start Fasting';
+                this.controlBtn.className = 'control-btn btn-start';
+                this.progressCircle.style.strokeDashoffset = this.circleCircumference;
+                this.progressCircle.style.stroke = 'var(--accent)';
+
+                document.querySelectorAll('.preset-btn').forEach(btn => btn.classList.remove('active'));
+                this.targetHours = null;
+
+                this.saveState();
+                this.updateStats();
+                this.renderHistory();
+            }
+
+            addToHistory(entry) {
+                this.history.unshift(entry);
+                if (this.history.length > 10) {
+                    this.history = this.history.slice(0, 10);
+                }
+                this.saveHistory();
+            }
+
+            calculateStreak() {
+                if (this.history.length === 0) return 0;
+
+                const completed = this.history.filter(h => h.completed);
+                if (completed.length === 0) return 0;
+
+                let streak = 0;
+                const now = new Date();
+                now.setHours(0, 0, 0, 0);
+
+                for (let i = 0; i < completed.length; i++) {
+                    const fastDate = new Date(completed[i].date);
+                    fastDate.setHours(0, 0, 0, 0);
+                    const daysDiff = Math.floor((now - fastDate) / (1000 * 60 * 60 * 24));
+
+                    if (daysDiff === i) {
+                        streak++;
+                    } else {
+                        break;
+                    }
+                }
+
+                return streak;
+            }
+
+            updateStats() {
+                const completedFasts = this.history.filter(h => h.completed);
+
+                // Streak
+                const streak = this.calculateStreak();
+                document.getElementById('statStreak').textContent = streak;
+
+                // Average duration
+                if (completedFasts.length > 0) {
+                    const avgHours = completedFasts.reduce((sum, h) => sum + h.actualHours, 0) / completedFasts.length;
+                    document.getElementById('statAverage').textContent = avgHours.toFixed(1) + 'h';
+                } else {
+                    document.getElementById('statAverage').textContent = '0h';
+                }
+
+                // Longest fast
+                if (completedFasts.length > 0) {
+                    const longest = Math.max(...completedFasts.map(h => h.actualHours));
+                    document.getElementById('statLongest').textContent = longest.toFixed(1) + 'h';
+                } else {
+                    document.getElementById('statLongest').textContent = '0h';
+                }
+
+                // Completion rate
+                if (this.history.length > 0) {
+                    const rate = (completedFasts.length / this.history.length * 100).toFixed(0);
+                    document.getElementById('statComplete').textContent = rate + '%';
+                } else {
+                    document.getElementById('statComplete').textContent = '0%';
+                }
+            }
+
+            renderHistory() {
+                if (this.history.length === 0) {
+                    this.historyList.innerHTML = '<div class="empty-state">No fasting sessions yet. Start your first fast above!</div>';
+                    return;
+                }
+
+                this.historyList.innerHTML = this.history.map(entry => {
+                    const date = new Date(entry.date);
+                    const dateStr = date.toLocaleDateString() + ' ' + date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                    const duration = entry.actualHours.toFixed(1) + 'h';
+                    const target = entry.targetHours + 'h';
+                    const badge = entry.completed ?
+                        '<span class="status-badge badge-eating">Completed</span>' :
+                        '<span class="status-badge badge-fasting">Stopped Early</span>';
+
+                    return `
+                        <div class="history-item">
+                            <div>
+                                <div class="history-duration">${duration} / ${target}</div>
+                                <div class="history-date">${dateStr}</div>
+                            </div>
+                            ${badge}
+                        </div>
+                    `;
+                }).join('');
+            }
+
+            saveState() {
+                localStorage.setItem('fastingTimer', JSON.stringify({
+                    targetHours: this.targetHours,
+                    startTime: this.startTime,
+                    endTime: this.endTime,
+                    isRunning: this.isRunning
+                }));
+            }
+
+            loadState() {
+                const saved = localStorage.getItem('fastingTimer');
+                if (saved) {
+                    const state = JSON.parse(saved);
+                    this.targetHours = state.targetHours;
+                    this.startTime = state.startTime;
+                    this.endTime = state.endTime;
+                    this.isRunning = state.isRunning;
+
+                    if (this.isRunning && this.endTime) {
+                        // Check if timer expired while app was closed
+                        if (Date.now() >= this.endTime) {
+                            this.completeFast();
+                        } else {
+                            this.controlBtn.textContent = 'Stop Fasting';
+                            this.controlBtn.className = 'control-btn btn-stop';
+
+                            // Highlight active preset
+                            if (this.targetHours) {
+                                const btn = document.querySelector(`[data-hours="${this.targetHours}"]`);
+                                if (btn) btn.classList.add('active');
+                            }
+                        }
+                    }
+                }
+            }
+
+            saveHistory() {
+                localStorage.setItem('fastingHistory', JSON.stringify(this.history));
+            }
+
+            loadHistory() {
+                const saved = localStorage.getItem('fastingHistory');
+                return saved ? JSON.parse(saved) : [];
+            }
+        }
+
+        // Initialize app
+        new FastingTimer();
+    </script>
+</body>
+</html>

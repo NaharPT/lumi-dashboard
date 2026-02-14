@@ -1,0 +1,642 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sleep Debt Tracker</title>
+    <style>
+        :root {
+            --bg: #0f172a;
+            --surface: #1e293b;
+            --surface2: #334155;
+            --border: #475569;
+            --text: #e2e8f0;
+            --text-muted: #94a3b8;
+            --accent: #38bdf8;
+            --danger: #f87171;
+            --warn: #fbbf24;
+            --ok: #4ade80;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            padding: 2rem 1rem;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
+            color: var(--accent);
+        }
+
+        .subtitle {
+            color: var(--text-muted);
+            font-size: 1.1rem;
+        }
+
+        .card {
+            background: var(--surface);
+            border-radius: 0.75rem;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            border: 1px solid var(--border);
+        }
+
+        .card h2 {
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+            color: var(--text);
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .stat-box {
+            background: var(--surface2);
+            padding: 1.25rem;
+            border-radius: 0.75rem;
+            text-align: center;
+            border: 2px solid var(--border);
+        }
+
+        .stat-box.ok {
+            border-color: var(--ok);
+        }
+
+        .stat-box.warn {
+            border-color: var(--warn);
+        }
+
+        .stat-box.danger {
+            border-color: var(--danger);
+        }
+
+        .stat-label {
+            color: var(--text-muted);
+            font-size: 0.875rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-value {
+            font-size: 2rem;
+            font-weight: bold;
+        }
+
+        .stat-value.ok {
+            color: var(--ok);
+        }
+
+        .stat-value.warn {
+            color: var(--warn);
+        }
+
+        .stat-value.danger {
+            color: var(--danger);
+        }
+
+        .form-group {
+            margin-bottom: 1rem;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: var(--text-muted);
+            font-size: 0.875rem;
+        }
+
+        input[type="number"],
+        input[type="time"] {
+            width: 100%;
+            padding: 0.75rem;
+            background: var(--surface2);
+            border: 1px solid var(--border);
+            border-radius: 0.5rem;
+            color: var(--text);
+            font-size: 1rem;
+        }
+
+        input[type="number"]:focus,
+        input[type="time"]:focus {
+            outline: none;
+            border-color: var(--accent);
+        }
+
+        .input-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .btn {
+            padding: 0.75rem 1.5rem;
+            background: var(--accent);
+            color: var(--bg);
+            border: none;
+            border-radius: 0.5rem;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn:hover {
+            background: #0ea5e9;
+            transform: translateY(-1px);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        .btn-secondary {
+            background: var(--surface2);
+            color: var(--text);
+        }
+
+        .btn-secondary:hover {
+            background: var(--border);
+        }
+
+        .chart-container {
+            height: 200px;
+            display: flex;
+            align-items: flex-end;
+            gap: 0.5rem;
+            margin-top: 1rem;
+            padding: 1rem;
+            background: var(--surface2);
+            border-radius: 0.5rem;
+        }
+
+        .bar-wrapper {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.25rem;
+        }
+
+        .bar {
+            width: 100%;
+            background: var(--accent);
+            border-radius: 0.25rem;
+            position: relative;
+            transition: all 0.3s;
+        }
+
+        .bar.below-target {
+            background: var(--danger);
+        }
+
+        .bar-label {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+        }
+
+        .history-list {
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .history-item {
+            background: var(--surface2);
+            padding: 1rem;
+            border-radius: 0.5rem;
+            margin-bottom: 0.75rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .history-date {
+            font-weight: 600;
+        }
+
+        .history-hours {
+            color: var(--text-muted);
+        }
+
+        .history-debt {
+            font-weight: 600;
+            padding: 0.25rem 0.75rem;
+            border-radius: 0.25rem;
+        }
+
+        .history-debt.positive {
+            background: var(--ok);
+            color: var(--bg);
+        }
+
+        .history-debt.negative {
+            background: var(--danger);
+            color: var(--bg);
+        }
+
+        .tips-list {
+            list-style: none;
+        }
+
+        .tips-list li {
+            padding: 0.5rem 0;
+            padding-left: 1.5rem;
+            position: relative;
+        }
+
+        .tips-list li:before {
+            content: "•";
+            color: var(--accent);
+            font-weight: bold;
+            position: absolute;
+            left: 0;
+        }
+
+        .recovery-info {
+            background: var(--surface2);
+            padding: 1rem;
+            border-radius: 0.5rem;
+            border-left: 4px solid var(--accent);
+            margin-top: 1rem;
+        }
+
+        .recovery-info strong {
+            color: var(--accent);
+        }
+
+        .divider {
+            text-align: center;
+            color: var(--text-muted);
+            margin: 1rem 0;
+            font-size: 0.875rem;
+        }
+
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--surface2);
+            border-radius: 0.25rem;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--border);
+            border-radius: 0.25rem;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--text-muted);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Sleep Debt Tracker</h1>
+            <p class="subtitle">Track & Recover Your Sleep</p>
+        </header>
+
+        <!-- Stats Overview -->
+        <div class="stats-grid">
+            <div class="stat-box" id="stat-7day">
+                <div class="stat-label">7-Day Sleep Debt</div>
+                <div class="stat-value" id="debt-7day">0.0h</div>
+            </div>
+            <div class="stat-box" id="stat-14day">
+                <div class="stat-label">14-Day Sleep Debt</div>
+                <div class="stat-value" id="debt-14day">0.0h</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-label">Weekly Average</div>
+                <div class="stat-value" id="weekly-avg">0.0h</div>
+            </div>
+        </div>
+
+        <!-- Settings -->
+        <div class="card">
+            <h2>Settings</h2>
+            <div class="form-group">
+                <label for="target-sleep">Target Sleep Hours per Night</label>
+                <input type="number" id="target-sleep" min="4" max="12" step="0.5" value="8">
+            </div>
+        </div>
+
+        <!-- Log Sleep -->
+        <div class="card">
+            <h2>Log Sleep</h2>
+            <div class="input-row">
+                <div class="form-group">
+                    <label for="bedtime">Bedtime</label>
+                    <input type="time" id="bedtime">
+                </div>
+                <div class="form-group">
+                    <label for="waketime">Wake Time</label>
+                    <input type="time" id="waketime">
+                </div>
+            </div>
+            <div class="divider">OR</div>
+            <div class="form-group">
+                <label for="total-hours">Total Sleep Hours</label>
+                <input type="number" id="total-hours" min="0" max="24" step="0.5" placeholder="e.g., 7.5">
+            </div>
+            <button class="btn" onclick="logSleep()">Log Sleep</button>
+        </div>
+
+        <!-- Recovery Estimate -->
+        <div class="card" id="recovery-section" style="display: none;">
+            <h2>Recovery Estimate</h2>
+            <div class="recovery-info" id="recovery-info"></div>
+        </div>
+
+        <!-- 7-Day Chart -->
+        <div class="card">
+            <h2>Last 7 Days</h2>
+            <div class="chart-container" id="chart"></div>
+        </div>
+
+        <!-- History -->
+        <div class="card">
+            <h2>Sleep History (Last 30 Days)</h2>
+            <div class="history-list" id="history"></div>
+        </div>
+
+        <!-- Sleep Hygiene Tips -->
+        <div class="card">
+            <h2>Sleep Hygiene Tips</h2>
+            <ul class="tips-list">
+                <li>Maintain a consistent sleep schedule, even on weekends</li>
+                <li>Create a dark, cool, quiet sleeping environment (65-68°F / 18-20°C)</li>
+                <li>Avoid screens 1 hour before bed (blue light disrupts melatonin)</li>
+                <li>Limit caffeine after 2 PM and alcohol before bed</li>
+                <li>Exercise regularly, but not within 3 hours of bedtime</li>
+                <li>Use bed only for sleep and intimacy, not work or TV</li>
+                <li>If you can't sleep after 20 minutes, get up and do a quiet activity</li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        const STORAGE_KEY = 'sleep-debt-tracker';
+        const MAX_HISTORY_DAYS = 30;
+
+        // Initialize
+        let data = loadData();
+        let targetSleep = parseFloat(localStorage.getItem('target-sleep') || '8');
+        document.getElementById('target-sleep').value = targetSleep;
+
+        // Load data from localStorage
+        function loadData() {
+            const stored = localStorage.getItem(STORAGE_KEY);
+            if (stored) {
+                return JSON.parse(stored);
+            }
+            return [];
+        }
+
+        // Save data to localStorage
+        function saveData() {
+            // Keep only last 30 days
+            const cutoff = new Date();
+            cutoff.setDate(cutoff.getDate() - MAX_HISTORY_DAYS);
+            data = data.filter(entry => new Date(entry.date) >= cutoff);
+
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+            updateDisplay();
+        }
+
+        // Update target sleep
+        document.getElementById('target-sleep').addEventListener('change', (e) => {
+            targetSleep = parseFloat(e.target.value);
+            localStorage.setItem('target-sleep', targetSleep);
+            updateDisplay();
+        });
+
+        // Calculate sleep hours from bedtime and waketime
+        function calculateSleepHours(bedtime, waketime) {
+            const [bedHour, bedMin] = bedtime.split(':').map(Number);
+            const [wakeHour, wakeMin] = waketime.split(':').map(Number);
+
+            let bedMinutes = bedHour * 60 + bedMin;
+            let wakeMinutes = wakeHour * 60 + wakeMin;
+
+            // If wake time is earlier in the day, it's next day
+            if (wakeMinutes < bedMinutes) {
+                wakeMinutes += 24 * 60;
+            }
+
+            return (wakeMinutes - bedMinutes) / 60;
+        }
+
+        // Log sleep entry
+        function logSleep() {
+            const bedtime = document.getElementById('bedtime').value;
+            const waketime = document.getElementById('waketime').value;
+            const totalHours = document.getElementById('total-hours').value;
+
+            let sleepHours;
+
+            if (totalHours) {
+                sleepHours = parseFloat(totalHours);
+            } else if (bedtime && waketime) {
+                sleepHours = calculateSleepHours(bedtime, waketime);
+            } else {
+                alert('Please enter either bedtime/waketime OR total sleep hours');
+                return;
+            }
+
+            const today = new Date().toISOString().split('T')[0];
+
+            // Check if entry for today already exists
+            const existingIndex = data.findIndex(entry => entry.date === today);
+
+            const debt = targetSleep - sleepHours;
+            const entry = {
+                date: today,
+                hours: sleepHours,
+                debt: debt,
+                target: targetSleep
+            };
+
+            if (existingIndex >= 0) {
+                data[existingIndex] = entry;
+            } else {
+                data.push(entry);
+            }
+
+            // Sort by date descending
+            data.sort((a, b) => new Date(b.date) - new Date(a.date));
+
+            saveData();
+
+            // Clear inputs
+            document.getElementById('bedtime').value = '';
+            document.getElementById('waketime').value = '';
+            document.getElementById('total-hours').value = '';
+        }
+
+        // Get color class based on debt hours
+        function getDebtColor(debt) {
+            const absDebt = Math.abs(debt);
+            if (absDebt < 1) return 'ok';
+            if (absDebt < 3) return 'warn';
+            return 'danger';
+        }
+
+        // Update all displays
+        function updateDisplay() {
+            updateStats();
+            updateChart();
+            updateHistory();
+            updateRecovery();
+        }
+
+        // Update statistics
+        function updateStats() {
+            const last7Days = data.slice(0, 7);
+            const last14Days = data.slice(0, 14);
+
+            const debt7 = last7Days.reduce((sum, entry) => sum + entry.debt, 0);
+            const debt14 = last14Days.reduce((sum, entry) => sum + entry.debt, 0);
+            const avgSleep = last7Days.length > 0
+                ? last7Days.reduce((sum, entry) => sum + entry.hours, 0) / last7Days.length
+                : 0;
+
+            // Update 7-day debt
+            const debt7El = document.getElementById('debt-7day');
+            const stat7Box = document.getElementById('stat-7day');
+            debt7El.textContent = `${debt7.toFixed(1)}h`;
+            const color7 = getDebtColor(debt7);
+            debt7El.className = `stat-value ${color7}`;
+            stat7Box.className = `stat-box ${color7}`;
+
+            // Update 14-day debt
+            const debt14El = document.getElementById('debt-14day');
+            const stat14Box = document.getElementById('stat-14day');
+            debt14El.textContent = `${debt14.toFixed(1)}h`;
+            const color14 = getDebtColor(debt14);
+            debt14El.className = `stat-value ${color14}`;
+            stat14Box.className = `stat-box ${color14}`;
+
+            // Update weekly average
+            document.getElementById('weekly-avg').textContent = `${avgSleep.toFixed(1)}h`;
+        }
+
+        // Update chart
+        function updateChart() {
+            const chart = document.getElementById('chart');
+            const last7Days = data.slice(0, 7).reverse();
+
+            if (last7Days.length === 0) {
+                chart.innerHTML = '<p style="text-align: center; color: var(--text-muted);">No data yet. Log your first sleep!</p>';
+                return;
+            }
+
+            const maxHours = Math.max(...last7Days.map(e => e.hours), targetSleep);
+
+            chart.innerHTML = last7Days.map(entry => {
+                const date = new Date(entry.date);
+                const dayName = date.toLocaleDateString('en-US', { weekday: 'short' });
+                const heightPercent = (entry.hours / maxHours) * 100;
+                const belowTarget = entry.hours < targetSleep;
+
+                return `
+                    <div class="bar-wrapper">
+                        <div class="bar ${belowTarget ? 'below-target' : ''}"
+                             style="height: ${heightPercent}%"
+                             title="${entry.hours.toFixed(1)}h (${entry.debt > 0 ? '-' : '+'}${Math.abs(entry.debt).toFixed(1)}h)">
+                        </div>
+                        <div class="bar-label">${dayName}</div>
+                        <div class="bar-label">${entry.hours.toFixed(1)}h</div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // Update history list
+        function updateHistory() {
+            const history = document.getElementById('history');
+
+            if (data.length === 0) {
+                history.innerHTML = '<p style="text-align: center; color: var(--text-muted);">No sleep logged yet.</p>';
+                return;
+            }
+
+            history.innerHTML = data.map(entry => {
+                const date = new Date(entry.date);
+                const dateStr = date.toLocaleDateString('en-US', {
+                    weekday: 'short',
+                    month: 'short',
+                    day: 'numeric'
+                });
+                const debtClass = entry.debt > 0 ? 'negative' : 'positive';
+                const debtSign = entry.debt > 0 ? '-' : '+';
+
+                return `
+                    <div class="history-item">
+                        <span class="history-date">${dateStr}</span>
+                        <span class="history-hours">${entry.hours.toFixed(1)}h slept</span>
+                        <span class="history-debt ${debtClass}">${debtSign}${Math.abs(entry.debt).toFixed(1)}h</span>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // Update recovery estimate
+        function updateRecovery() {
+            const last7Days = data.slice(0, 7);
+            const totalDebt = last7Days.reduce((sum, entry) => sum + entry.debt, 0);
+
+            const recoverySection = document.getElementById('recovery-section');
+            const recoveryInfo = document.getElementById('recovery-info');
+
+            if (totalDebt <= 0) {
+                recoverySection.style.display = 'none';
+                return;
+            }
+
+            recoverySection.style.display = 'block';
+
+            // Assume 1 hour extra sleep per night for recovery
+            const extraPerNight = 1;
+            const nightsNeeded = Math.ceil(totalDebt / extraPerNight);
+            const hoursPerNight = targetSleep + extraPerNight;
+
+            recoveryInfo.innerHTML = `
+                You currently have <strong>${totalDebt.toFixed(1)} hours</strong> of sleep debt.
+                <br><br>
+                To clear this debt: Sleep <strong>${hoursPerNight.toFixed(1)} hours</strong> per night
+                for the next <strong>${nightsNeeded} nights</strong> (${extraPerNight}h extra per night).
+                <br><br>
+                Remember: Consistent sleep is more important than "catching up" on weekends.
+            `;
+        }
+
+        // Initial display update
+        updateDisplay();
+    </script>
+</body>
+</html>
