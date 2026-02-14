@@ -372,11 +372,6 @@ let currentWeather = null;
 
 // --- Init ---
 function init() {
-  // Ensure API key is saved
-  if (!localStorage.getItem(API_KEY_STORAGE)) {
-    localStorage.setItem(API_KEY_STORAGE, DEFAULT_API_KEY);
-  }
-
   entries = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
   document.getElementById('entry-date').value = todayStr();
   document.getElementById('api-key').value = getApiKey();
