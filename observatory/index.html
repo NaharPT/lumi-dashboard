@@ -1,0 +1,1541 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Observatory | Multiverse Forge Lab</title>
+    <link href="https://fonts.googleapis.com/css2?family=Exo+2:wght@500;600;700;800&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-deep: #030711;
+            --bg-primary: #040811;
+            --bg-secondary: #0a1122;
+            --bg-card: rgba(10, 18, 38, 0.75);
+            --bg-card-hover: rgba(14, 24, 50, 0.85);
+            --border: rgba(100, 120, 180, 0.08);
+            --border-hover: rgba(0, 229, 255, 0.2);
+            --border-active: rgba(0, 229, 255, 0.35);
+            --text-primary: #e4e8f0;
+            --text-secondary: #8892a8;
+            --text-muted: #4a5568;
+            --cyan: #00e5ff;
+            --cyan-dim: rgba(0, 229, 255, 0.6);
+            --violet: #a78bfa;
+            --violet-dim: rgba(167, 139, 250, 0.6);
+            --indigo: #818cf8;
+            --gradient: linear-gradient(135deg, #00e5ff, #a78bfa);
+            --gradient-subtle: linear-gradient(135deg, rgba(0,229,255,0.12), rgba(167,139,250,0.12));
+            --glow-cyan: 0 0 20px rgba(0, 229, 255, 0.12);
+            --glow-violet: 0 0 20px rgba(167, 139, 250, 0.12);
+            --status-active: #34d399;
+            --status-mvp: #22d3ee;
+            --status-wip: #fbbf24;
+            --status-abandoned: #f87171;
+            --status-planned: #60a5fa;
+            --status-idea: #9ca3af;
+            --status-template: #a78bfa;
+            --status-empty: #4b5563;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html { scroll-behavior: smooth; }
+        body {
+            font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+            background: var(--bg-deep);
+            color: var(--text-primary);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+        /* ── Animated Background ─────────────────── */
+        .bg-mesh {
+            position: fixed; inset: 0; z-index: 0; pointer-events: none;
+            overflow: hidden;
+        }
+        .bg-orb {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(100px);
+            opacity: 0.07;
+            animation: drift 20s ease-in-out infinite alternate;
+        }
+        .bg-orb-1 {
+            width: 600px; height: 600px;
+            background: var(--cyan);
+            top: -200px; left: -100px;
+            animation-duration: 25s;
+        }
+        .bg-orb-2 {
+            width: 500px; height: 500px;
+            background: var(--violet);
+            bottom: -150px; right: -100px;
+            animation-duration: 30s;
+            animation-delay: -10s;
+        }
+        .bg-orb-3 {
+            width: 350px; height: 350px;
+            background: var(--indigo);
+            top: 40%; left: 50%;
+            animation-duration: 22s;
+            animation-delay: -5s;
+        }
+        @keyframes drift {
+            0% { transform: translate(0, 0) scale(1); }
+            33% { transform: translate(40px, -30px) scale(1.05); }
+            66% { transform: translate(-20px, 40px) scale(0.95); }
+            100% { transform: translate(30px, 20px) scale(1.02); }
+        }
+        /* ── Scan lines overlay ─────────────────── */
+        .scanlines {
+            position: fixed; inset: 0; z-index: 1; pointer-events: none;
+            background: repeating-linear-gradient(
+                0deg,
+                transparent,
+                transparent 2px,
+                rgba(0,0,0,0.03) 2px,
+                rgba(0,0,0,0.03) 4px
+            );
+        }
+        /* ── Layout ─────────────────────────────── */
+        .container {
+            position: relative; z-index: 2;
+            max-width: 1440px;
+            margin: 0 auto;
+            padding: 0 36px;
+        }
+        /* ── Header ─────────────────────────────── */
+        .header {
+            padding: 48px 0 16px;
+        }
+        .header-row {
+            display: flex;
+            align-items: center;
+            gap: 18px;
+        }
+        .header-icon {
+            width: 48px; height: 48px;
+            background: var(--gradient);
+            border-radius: 14px;
+            display: flex; align-items: center; justify-content: center;
+            box-shadow: var(--glow-cyan), 0 0 40px rgba(0, 229, 255, 0.08);
+            flex-shrink: 0;
+            position: relative;
+            overflow: hidden;
+        }
+        .header-icon::after {
+            content: '';
+            position: absolute; inset: 0;
+            background: linear-gradient(135deg, rgba(255,255,255,0.2) 0%, transparent 50%);
+            border-radius: 14px;
+        }
+        .header-icon svg { position: relative; z-index: 1; }
+        .header h1 {
+            font-family: 'Exo 2', sans-serif;
+            font-size: 32px;
+            font-weight: 800;
+            background: var(--gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            letter-spacing: -0.5px;
+        }
+        .header-sub {
+            color: var(--text-muted);
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 4px;
+            font-weight: 500;
+            margin-top: 2px;
+            margin-left: 66px;
+        }
+        .back-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            margin-left: 66px;
+            margin-top: 10px;
+            color: var(--text-muted);
+            text-decoration: none;
+            font-size: 12px;
+            transition: color 0.2s;
+        }
+        .back-link:hover { color: var(--cyan); }
+        /* ── Stats Bar ──────────────────────────── */
+        .stats-bar {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 10px;
+            margin: 24px 0;
+        }
+        .stat-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 16px 20px;
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            transition: border-color 0.3s, box-shadow 0.3s;
+            position: relative;
+            overflow: hidden;
+        }
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 1px;
+            background: var(--gradient);
+            opacity: 0.3;
+        }
+        .stat-card:hover {
+            border-color: var(--border-hover);
+            box-shadow: var(--glow-cyan);
+        }
+        .stat-value {
+            font-family: 'Exo 2', sans-serif;
+            font-size: 30px;
+            font-weight: 700;
+            background: var(--gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            line-height: 1.1;
+        }
+        .stat-label {
+            color: var(--text-muted);
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            margin-top: 4px;
+            font-weight: 500;
+        }
+        /* ── View Toggle ────────────────────────── */
+        .toolbar {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin: 20px 0 24px;
+            flex-wrap: wrap;
+        }
+        .view-toggle {
+            display: flex;
+            gap: 2px;
+            background: rgba(10, 18, 38, 0.6);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 3px;
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+        }
+        .view-btn {
+            padding: 8px 20px;
+            background: transparent;
+            border: none;
+            border-radius: 10px;
+            color: var(--text-muted);
+            font-size: 13px;
+            font-family: 'DM Sans', sans-serif;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.25s;
+            position: relative;
+        }
+        .view-btn.active {
+            background: var(--gradient-subtle);
+            color: var(--text-primary);
+            box-shadow: inset 0 0 0 1px rgba(0, 229, 255, 0.15);
+        }
+        .view-btn:hover:not(.active) { color: var(--text-secondary); }
+        .view-btn .badge {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 20px;
+            height: 18px;
+            padding: 0 5px;
+            border-radius: 9px;
+            background: rgba(0, 229, 255, 0.1);
+            color: var(--cyan-dim);
+            font-size: 10px;
+            font-weight: 600;
+            margin-left: 6px;
+        }
+        /* ── Search & Filters ───────────────────── */
+        .controls { margin-bottom: 20px; }
+        .search-box {
+            width: 100%;
+            padding: 13px 18px 13px 44px;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            color: var(--text-primary);
+            font-size: 14px;
+            font-family: 'DM Sans', sans-serif;
+            outline: none;
+            transition: border-color 0.25s, box-shadow 0.25s;
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%234a5568' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='11' cy='11' r='8'/%3E%3Cline x1='21' y1='21' x2='16.65' y2='16.65'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: 15px center;
+        }
+        .search-box:focus {
+            border-color: var(--border-active);
+            box-shadow: 0 0 0 3px rgba(0, 229, 255, 0.06);
+        }
+        .search-box::placeholder { color: var(--text-muted); }
+        .filter-row {
+            display: flex;
+            gap: 10px;
+            margin-top: 12px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+        .filter-label {
+            color: var(--text-muted);
+            font-size: 10px;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            font-weight: 600;
+            padding: 6px 0;
+        }
+        .filter-group {
+            display: flex;
+            gap: 4px;
+            flex-wrap: wrap;
+        }
+        .filter-btn {
+            padding: 5px 12px;
+            background: transparent;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            color: var(--text-muted);
+            font-size: 11px;
+            font-family: 'DM Sans', sans-serif;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            white-space: nowrap;
+        }
+        .filter-btn:hover {
+            border-color: var(--border-hover);
+            color: var(--text-secondary);
+        }
+        .filter-btn.active {
+            background: var(--gradient-subtle);
+            border-color: rgba(0, 229, 255, 0.25);
+            color: var(--text-primary);
+        }
+        .results-count {
+            color: var(--text-muted);
+            font-size: 12px;
+            padding: 8px 0;
+        }
+        /* ── Summary View ───────────────────────── */
+        .summary-view { display: none; }
+        .summary-view.visible { display: block; }
+        .charts-row {
+            display: grid;
+            grid-template-columns: 280px 1fr;
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+        .chart-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 24px;
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            position: relative;
+            overflow: hidden;
+        }
+        .chart-card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 1px;
+            background: var(--gradient);
+            opacity: 0.25;
+        }
+        .chart-title {
+            font-family: 'Exo 2', sans-serif;
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            margin-bottom: 20px;
+        }
+        /* Donut Chart */
+        .donut-wrapper {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 20px;
+        }
+        .donut {
+            width: 180px; height: 180px;
+            border-radius: 50%;
+            position: relative;
+            display: flex; align-items: center; justify-content: center;
+        }
+        .donut-hole {
+            width: 110px; height: 110px;
+            border-radius: 50%;
+            background: var(--bg-deep);
+            display: flex; flex-direction: column;
+            align-items: center; justify-content: center;
+            position: relative; z-index: 1;
+        }
+        .donut-total {
+            font-family: 'Exo 2', sans-serif;
+            font-size: 32px;
+            font-weight: 700;
+            background: var(--gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            line-height: 1;
+        }
+        .donut-label {
+            font-size: 10px;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-top: 2px;
+        }
+        .legend {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px 16px;
+            justify-content: center;
+        }
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 11px;
+            color: var(--text-secondary);
+        }
+        .legend-dot {
+            width: 8px; height: 8px;
+            border-radius: 3px;
+            flex-shrink: 0;
+        }
+        /* Bar Chart */
+        .bar-chart { display: flex; flex-direction: column; gap: 8px; }
+        .bar-row {
+            display: grid;
+            grid-template-columns: 120px 1fr 40px;
+            align-items: center;
+            gap: 12px;
+        }
+        .bar-name {
+            font-size: 12px;
+            color: var(--text-secondary);
+            text-align: right;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        .bar-track {
+            height: 22px;
+            background: rgba(255,255,255,0.03);
+            border-radius: 6px;
+            overflow: hidden;
+            position: relative;
+        }
+        .bar-fill {
+            height: 100%;
+            border-radius: 6px;
+            background: var(--gradient);
+            transition: width 0.8s cubic-bezier(0.22, 1, 0.36, 1);
+            position: relative;
+        }
+        .bar-fill::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(90deg, transparent 60%, rgba(255,255,255,0.12));
+            border-radius: 6px;
+        }
+        .bar-count {
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            font-variant-numeric: tabular-nums;
+        }
+        /* ── Summary Table ──────────────────────── */
+        .table-wrapper {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            overflow: hidden;
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            position: relative;
+        }
+        .table-wrapper::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 1px;
+            background: var(--gradient);
+            opacity: 0.25;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        th {
+            font-family: 'Exo 2', sans-serif;
+            font-size: 10px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            color: var(--text-muted);
+            padding: 14px 16px;
+            text-align: left;
+            cursor: pointer;
+            -webkit-user-select: none;
+            user-select: none;
+            transition: color 0.2s;
+            white-space: nowrap;
+            border-bottom: 1px solid var(--border);
+        }
+        th:hover { color: var(--cyan); }
+        th .sort-arrow { margin-left: 4px; opacity: 0.4; }
+        th.sorted .sort-arrow { opacity: 1; color: var(--cyan); }
+        td {
+            padding: 10px 16px;
+            font-size: 13px;
+            border-bottom: 1px solid rgba(255,255,255,0.02);
+            color: var(--text-secondary);
+        }
+        tr:hover td {
+            background: rgba(0, 229, 255, 0.02);
+        }
+        .td-name {
+            font-weight: 500;
+            color: var(--text-primary);
+        }
+        .td-status {
+            display: inline-block;
+            font-size: 10px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            padding: 2px 8px;
+            border-radius: 5px;
+        }
+        .td-outputs {
+            display: flex;
+            gap: 4px;
+            flex-wrap: wrap;
+        }
+        .output-pip {
+            width: 8px; height: 8px;
+            border-radius: 2px;
+            opacity: 0.7;
+        }
+        .pip-html { background: var(--cyan); }
+        .pip-report { background: var(--violet); }
+        .pip-launch { background: var(--status-active); }
+        /* ── Grid View ──────────────────────────── */
+        .grid-view { display: none; }
+        .grid-view.visible { display: block; }
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+            gap: 12px;
+            padding-bottom: 60px;
+        }
+        /* ── Card Design ────────────────────────── */
+        .card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-left: 3px solid var(--text-muted);
+            border-radius: 14px;
+            padding: 20px 20px 16px;
+            transition: all 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+            cursor: pointer;
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            position: relative;
+            overflow: hidden;
+        }
+        .card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: linear-gradient(135deg, rgba(255,255,255,0.02) 0%, transparent 60%);
+            opacity: 0;
+            transition: opacity 0.3s;
+            pointer-events: none;
+        }
+        .card:hover {
+            border-color: var(--border-hover);
+            box-shadow: 0 8px 40px rgba(0,0,0,0.3), var(--glow-cyan);
+            transform: translateY(-2px);
+        }
+        .card:hover::before { opacity: 1; }
+        .card-bl-active { border-left-color: var(--status-active); }
+        .card-bl-mvp-done { border-left-color: var(--status-mvp); }
+        .card-bl-wip { border-left-color: var(--status-wip); }
+        .card-bl-abandoned { border-left-color: var(--status-abandoned); }
+        .card-bl-planned { border-left-color: var(--status-planned); }
+        .card-bl-idea-only { border-left-color: var(--status-idea); }
+        .card-bl-template { border-left-color: var(--status-template); }
+        .card-bl-empty { border-left-color: var(--status-empty); }
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 10px;
+            margin-bottom: 8px;
+        }
+        .card-name {
+            font-family: 'Exo 2', sans-serif;
+            font-size: 15px;
+            font-weight: 600;
+            color: var(--text-primary);
+            line-height: 1.3;
+        }
+        .card-status {
+            font-size: 9px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            padding: 3px 8px;
+            border-radius: 6px;
+            white-space: nowrap;
+            flex-shrink: 0;
+        }
+        .s-active { background: rgba(52,211,153,0.12); color: var(--status-active); }
+        .s-mvp-done { background: rgba(34,211,238,0.12); color: var(--status-mvp); }
+        .s-wip { background: rgba(251,191,36,0.12); color: var(--status-wip); }
+        .s-abandoned { background: rgba(248,113,113,0.12); color: var(--status-abandoned); }
+        .s-planned { background: rgba(96,165,250,0.12); color: var(--status-planned); }
+        .s-idea-only { background: rgba(156,163,175,0.12); color: var(--status-idea); }
+        .s-template { background: rgba(167,139,250,0.12); color: var(--status-template); }
+        .s-empty { background: rgba(75,85,99,0.12); color: var(--status-empty); }
+        .card-purpose {
+            color: var(--text-secondary);
+            font-size: 13px;
+            line-height: 1.55;
+            margin-bottom: 12px;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+        .card-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 5px;
+            margin-bottom: 12px;
+        }
+        .tag {
+            font-size: 10px;
+            padding: 2px 8px;
+            border-radius: 5px;
+            font-weight: 500;
+        }
+        .tag-domain {
+            background: rgba(0, 229, 255, 0.07);
+            border: 1px solid rgba(0, 229, 255, 0.12);
+            color: var(--cyan-dim);
+        }
+        .tag-tech {
+            background: rgba(255,255,255,0.03);
+            border: 1px solid rgba(255,255,255,0.05);
+            color: var(--text-muted);
+        }
+        .tag-ui {
+            background: rgba(167, 139, 250, 0.07);
+            border: 1px solid rgba(167, 139, 250, 0.12);
+            color: var(--violet-dim);
+        }
+        .card-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .card-icons {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+        .card-icon {
+            font-size: 10px;
+            color: var(--text-muted);
+            display: flex;
+            align-items: center;
+            gap: 3px;
+        }
+        .dot {
+            width: 6px; height: 6px;
+            border-radius: 50%;
+            display: inline-block;
+        }
+        .dot-green { background: var(--status-active); }
+        .dot-gray { background: var(--status-empty); }
+        .card-date {
+            font-size: 11px;
+            color: var(--text-muted);
+            font-variant-numeric: tabular-nums;
+        }
+        /* ── Card Expanded Details ──────────────── */
+        .card-details {
+            display: none;
+            margin-top: 14px;
+            padding-top: 14px;
+            border-top: 1px solid var(--border);
+        }
+        .card.expanded .card-details { display: block; }
+        .card.expanded .card-purpose {
+            -webkit-line-clamp: unset;
+        }
+        .detail-section { margin-bottom: 12px; }
+        .detail-label {
+            font-size: 9px;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            color: var(--text-muted);
+            margin-bottom: 6px;
+            font-weight: 600;
+        }
+        .detail-list {
+            list-style: none;
+            padding: 0;
+        }
+        .detail-list li {
+            font-size: 12px;
+            color: var(--text-secondary);
+            padding: 2px 0 2px 14px;
+            position: relative;
+        }
+        .detail-list li::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 9px;
+            width: 4px;
+            height: 4px;
+            border-radius: 50%;
+            background: var(--cyan);
+            opacity: 0.4;
+        }
+        /* ── Output Action Buttons ──────────────── */
+        .output-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin-top: 8px;
+        }
+        .output-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            padding: 5px 10px;
+            border-radius: 7px;
+            font-size: 11px;
+            font-family: 'DM Sans', sans-serif;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-decoration: none;
+            border: none;
+        }
+        .output-btn-html {
+            background: rgba(0, 229, 255, 0.08);
+            border: 1px solid rgba(0, 229, 255, 0.15);
+            color: var(--cyan);
+        }
+        .output-btn-html:hover {
+            background: rgba(0, 229, 255, 0.15);
+            box-shadow: 0 0 12px rgba(0, 229, 255, 0.1);
+        }
+        .output-btn-report {
+            background: rgba(167, 139, 250, 0.08);
+            border: 1px solid rgba(167, 139, 250, 0.15);
+            color: var(--violet);
+        }
+        .output-btn-report:hover {
+            background: rgba(167, 139, 250, 0.15);
+            box-shadow: 0 0 12px rgba(167, 139, 250, 0.1);
+        }
+        .output-btn-launch {
+            background: rgba(52, 211, 153, 0.08);
+            border: 1px solid rgba(52, 211, 153, 0.15);
+            color: var(--status-active);
+        }
+        .output-btn-launch:hover {
+            background: rgba(52, 211, 153, 0.15);
+            box-shadow: 0 0 12px rgba(52, 211, 153, 0.1);
+        }
+        .output-btn-web {
+            background: rgba(251, 191, 36, 0.08);
+            border: 1px solid rgba(251, 191, 36, 0.15);
+            color: var(--status-wip);
+        }
+        .output-btn-web:hover {
+            background: rgba(251, 191, 36, 0.15);
+            box-shadow: 0 0 12px rgba(251, 191, 36, 0.1);
+        }
+        /* ── Planned View ───────────────────────── */
+        .planned-view { display: none; }
+        .planned-view.visible { display: block; padding-bottom: 60px; }
+        .priority-section { margin-bottom: 32px; }
+        .priority-header {
+            font-family: 'Exo 2', sans-serif;
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .priority-badge {
+            font-size: 10px;
+            font-weight: 700;
+            padding: 3px 10px;
+            border-radius: 6px;
+            letter-spacing: 1px;
+        }
+        .pb-p1 { background: rgba(248,113,113,0.12); color: var(--status-abandoned); }
+        .pb-p2 { background: rgba(251,191,36,0.12); color: var(--status-wip); }
+        .pb-p3 { background: rgba(156,163,175,0.12); color: var(--status-idea); }
+        .planned-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+            gap: 10px;
+        }
+        .planned-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-left: 3px solid var(--status-planned);
+            border-radius: 12px;
+            padding: 16px 18px;
+            transition: all 0.2s;
+        }
+        .planned-card:hover {
+            border-color: var(--border-hover);
+            box-shadow: var(--glow-cyan);
+        }
+        .planned-name {
+            font-family: 'Exo 2', sans-serif;
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 4px;
+        }
+        .planned-desc {
+            font-size: 12px;
+            color: var(--text-secondary);
+            line-height: 1.5;
+        }
+        .planned-domain {
+            margin-top: 8px;
+        }
+        /* ── Empty State ────────────────────────── */
+        .empty-state {
+            grid-column: 1 / -1;
+            text-align: center;
+            padding: 60px 20px;
+            color: var(--text-muted);
+        }
+        .empty-state h3 {
+            font-family: 'Exo 2', sans-serif;
+            font-size: 18px;
+            margin-bottom: 8px;
+            color: var(--text-secondary);
+        }
+        .hidden { display: none !important; }
+        /* ── Responsive ─────────────────────────── */
+        @media (max-width: 900px) {
+            .container { padding: 0 16px; }
+            .charts-row { grid-template-columns: 1fr; }
+            .grid { grid-template-columns: 1fr; }
+            .planned-list { grid-template-columns: 1fr; }
+            .stats-bar { grid-template-columns: repeat(2, 1fr); }
+            .header h1 { font-size: 24px; }
+            .toolbar { flex-direction: column; align-items: stretch; }
+        }
+        /* ── Animations ─────────────────────────── */
+        @keyframes fadeUp {
+            from { opacity: 0; transform: translateY(12px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .fade-up {
+            animation: fadeUp 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
+        }
+        .card { animation: fadeUp 0.4s cubic-bezier(0.22, 1, 0.36, 1) both; }
+    </style>
+</head>
+<body>
+    <div class="bg-mesh">
+        <div class="bg-orb bg-orb-1"></div>
+        <div class="bg-orb bg-orb-2"></div>
+        <div class="bg-orb bg-orb-3"></div>
+    </div>
+    <div class="scanlines"></div>
+    <div class="container" id="app"></div>
+    <script>
+    const CATALOG = [{"name": "GPT-SoVITS", "purpose": "Few-shot voice conversion and text-to-speech system (cloned repo from RVC-Boss) with custom Nuno narrator config.", "status": "active", "tech_stack": ["python", "pytorch", "docker"], "has_ui": true, "ui_type": "html", "has_tests": false, "test_count": 0, "has_run_script": false, "sub_projects": [], "key_outputs": ["TTS voice cloning WebUI", "API server", "Nuno narrator voice config"], "last_modified": "2025-12", "domain": "ai-tools", "outputs": {"html_files": [], "report_files": [{"path": "docs/cn/Changelog_CN.md", "file_url": "file:///c:/Users/nfval/Projects/GPT-SoVITS/docs/cn/Changelog_CN.md"}, {"path": "docs/en/Changelog_EN.md", "file_url": "file:///c:/Users/nfval/Projects/GPT-SoVITS/docs/en/Changelog_EN.md"}, {"path": "docs/ja/Changelog_JA.md", "file_url": "file:///c:/Users/nfval/Projects/GPT-SoVITS/docs/ja/Changelog_JA.md"}, {"path": "docs/ko/Changelog_KO.md", "file_url": "file:///c:/Users/nfval/Projects/GPT-SoVITS/docs/ko/Changelog_KO.md"}, {"path": "docs/tr/Changelog_TR.md", "file_url": "file:///c:/Users/nfval/Projects/GPT-SoVITS/docs/tr/Changelog_TR.md"}], "output_dirs": [], "launch": []}}, {"name": "SPECIAL_edge-things-to-explore", "purpose": "Dumping ground for miscellaneous documents, briefs, and image assets.", "status": "abandoned", "tech_stack": [], "has_ui": false, "ui_type": "none", "has_tests": false, "test_count": 0, "has_run_script": false, "sub_projects": [], "key_outputs": ["Influence Blast Plan docx", "SAKAI brief"], "last_modified": "2025-06", "domain": "other", "outputs": {"html_files": [], "report_files": [], "output_dirs": [], "launch": []}}, {"name": "_sandbox", "purpose": "Empty sandbox folder for temporary experiments.", "status": "empty", "tech_stack": [], "has_ui": false, "ui_type": "none", "has_tests": false, "test_count": 0, "has_run_script": false, "sub_projects": [], "key_outputs": [], "last_modified": "N/A", "domain": "infrastructure", "outputs": {"html_files": [], "report_files": [], "output_dirs": [], "launch": []}}, {"name": "_templates", "purpose": "Project template folder containing a vibe-automation-template scaffold.", "status": "template", "tech_stack": ["python"], "has_ui": false, "ui_type": "none", "has_tests": false, "test_count": 0, "has_run_script": true, "sub_projects": ["_vibe-automation-template"], "key_outputs": ["Reusable project template"], "last_modified": "2025-12", "domain": "infrastructure", "outputs": {"html_files": [], "report_files": [], "output_dirs": [], "launch": []}}, {"name": "agency", "purpose": "Hybrid marketing/PR/creative agency platform powered by 73 specialized AI agents across 15 departments.", "status": "wip", "tech_stack": ["javascript", "react", "node", "express", "docker"], "has_ui": true, "ui_type": "dashboard", "has_tests": false, "test_count": 0, "has_run_script": false, "sub_projects": ["frontend", "backend", "shared"], "key_outputs": ["AI agent registry (73 agents)", "Client/campaign management dashboard"], "last_modified": "2026-01", "domain": "work", "outputs": {"html_files": [{"path": "frontend/public/index.html", "file_url": "file:///c:/Users/nfval/Projects/agency/frontend/public/index.html"}], "report_files": [{"path": ".claude/agents/ops/client-reporter.md", "file_url": "file:///c:/Users/nfval/Projects/agency/.claude/agents/ops/client-reporter.md"}, {"path": ".claude/agents/studio-operations/analytics-reporter.md", "file_url": "file:///c:/Users/nfval/Projects/agency/.claude/agents/studio-operations/analytics-reporter.md"}], "output_dirs": [], "launch": []}}, {"name": "ai-frameworks", "purpose": "AI governance framework customized for Merck Healthcare R&D with implementation master plan.", "status": "active", "tech_stack": ["python", "markdown", "docx"], "has_ui": false, "ui_type": "none", "has_tests": false, "test_count": 0, "has_run_script": false, "sub_projects": [], "key_outputs": ["Merck AI Framework docx", "Implementation Master Plan", "Lenses of Value concept"], "last_modified": "2026-02", "domain": "work", "outputs": {"html_files": [], "report_files": [], "output_dirs": [], "launch": []}}, {"name": "ai-governance-wargame", "purpose": "Interactive wargame simulator for AI governance scenarios with branching decisions and 5-dimension scoring.", "status": "wip", "tech_stack": ["python", "yaml", "sqlite"], "has_ui": false, "ui_type": "none", "has_tests": true, "test_count": 5, "has_run_script": true, "sub_projects": [], "key_outputs": ["4 YAML scenarios", "Game engine with branching logic", "5-dimension scorecard"], "last_modified": "2026-01", "domain": "work", "outputs": {"html_files": [], "report_files": [{"path": "reports/hallucination_report_20260210_215623.md", "file_url": "file:///c:/Users/nfval/Projects/ai-governance-wargame/reports/hallucination_report_20260210_215623.md"}], "output_dirs": [], "launch": [{"type": "script", "label": "Run Script", "command": "cd \"c:\\Users\\nfval\\Projects\\ai-governance-wargame\" && powershell -File run.ps1", "file": "run.ps1"}]}}, {"name": "ai-text-toolkit", "purpose": "Streamlit app for detecting AI-generated text signals and humanizing text with rule-based and Ollama transformations.", "status": "mvp-done", "tech_stack": ["python", "streamlit", "ollama"], "has_ui": true, "ui_type": "streamlit", "has_tests": true, "test_count": 4, "has_run_script": true, "sub_projects": [], "key_outputs": ["AI text detection analyzer", "Rule-based humanizer", "PDF/DOCX parsers"], "last_modified": "2026-01", "domain": "ai-tools", "outputs": {"html_files": [], "report_files": [], "output_dirs": [], "launch": [{"type": "streamlit", "label": "Streamlit App", "command": "cd \"c:\\Users\\nfval\\Projects\\ai-text-toolkit\" && streamlit run app.py", "file": "app.py"}, {"type": "script", "label": "Run Script", "command": "cd \"c:\\Users\\nfval\\Projects\\ai-text-toolkit\" && powershell -File run.ps1", "file": "run.ps1"}]}}, {"name": "app-factory", "purpose": "App innovation engine and product showcase site (factory.nunovalerio.com) with public portfolio and private pipeline.", "status": "active", "tech_stack": ["astro", "tailwind", "typescript", "node"], "has_ui": true, "ui_type": "website", "has_tests": false, "test_count": 0, "has_run_script": true, "sub_projects": [], "key_outputs": ["Public product showcase website", "Private kanban pipeline"], "last_modified": "2026-02", "domain": "personal-brand", "outputs": {"html_files": [], "report_files": [], "output_dirs": [], "launch": [{"type": "script", "label": "Run Script", "command": "cd \"c:\\Users\\nfval\\Projects\\app-factory\" && powershell -File run.ps1", "file": "run.ps1"}]}}, {"name": "apple-health-analyzer", "purpose": "Parses Apple Health XML exports and generates reports on activity rings, workouts, heart rate trends, and sleep.", "status": "wip", "tech_stack": ["python"], "has_ui": false, "ui_type": "none", "has_tests": true, "test_count": 2, "has_run_script": true, "sub_projects": [], "key_outputs": ["Activity report", "Workout report", "Heart rate report", "Sleep report"], "last_modified": "2026-01", "domain": "health", "outputs": {"html_files": [], "report_files": [{"path": "reports/activity_report.md", "file_url": "file:///c:/Users/nfval/Projects/apple-health-analyzer/reports/activity_report.md"}, {"path": "reports/heart_rate_report.md", "file_url": "file:///c:/Users/nfval/Projects/apple-health-analyzer/reports/heart_rate_report.md"}, {"path": "reports/sleep_report.md", "file_url": "file:///c:/Users/nfval/Projects/apple-health-analyzer/reports/sleep_report.md"}, {"path": "reports/workout_report.md", "file_url": "file:///c:/Users/nfval/Projects/apple-health-analyzer/reports/workout_report.md"}], "output_dirs": [], "launch": [{"type": "script", "label": "Run Script", "command": "cd \"c:\\Users\\nfval\\Projects\\apple-health-analyzer\" && powershell -File run.ps1", "file": "run.ps1"}]}}, {"name": "argument-mapper", "purpose": "Streamlit app that extracts logical argument structure from text using Claude API with interactive graph visualization.", "status": "wip", "tech_stack": ["python", "streamlit", "anthropic", "pyvis"], "has_ui": true, "ui_type": "streamlit", "has_tests": true, "test_count": 3, "has_run_script": true, "sub_projects": [], "key_outputs": ["Interactive argument graph", "Fallacy detection (10 types)"], "last_modified": "2026-01", "domain": "ai-tools", "outputs": {"html_files": [], "report_files": [], "output_dirs": [], "launch": [{"type": "streamlit", "label": "Streamlit App", "command": "cd \"c:\\Users\\nfval\\Projects\\argument-mapper\" && streamlit run scripts/app.py", "file": "scripts/app.py"}, {"type": "script", "label": "Run Script", "command": "cd \"c:\\Users\\nfval\\Projects\\argument-mapper\" && powershell -File run.ps1", "file": "run.ps1"}]}}, {"name": "auto_finance_merging", "purpose": "Automated reconciliation of Commerzbank exports with GoodBudget using multi-pass fuzzy matching and Notion sync.", "status": "mvp-done", "tech_stack": ["python", "notion-api"], "has_ui": false, "ui_type": "none", "has_tests": true, "test_count": 2, "has_run_script": true, "sub_projects": [], "key_outputs": ["HTML reconciliation report", "GoodBudget import CSV", "Notion database sync"], "last_modified": "2026-01", "domain": "finance", "outputs": {"html_files": [{"path": "data/output/reconciliation_report_20260129_190816.html", "file_url": "file:///c:/Users/nfval/Projects/auto_finance_merging/data/output/reconciliation_report_20260129_190816.html"}], "report_files": [], "output_dirs": [{"path": "data/output", "files": ["phase3_classification.json", "phase3_db_schemas.json", "phase3_dedup_report.json", "phase3_state.json", "reconciliation_20260130_2338.json"]}], "launch": [{"type": "script", "label": "Run Script", "command": "cd \"c:\\Users\\nfval\\Projects\\auto_finance_merging\" && powershell -File run.ps1", "file": "run.ps1"}]}}, {"name": "beacon-platform", "purpose": "Interactive HTML presentation and collaboration dashboard for the Beacon AI platform concept.", "status": "mvp-done", "tech_stack": ["html", "javascript", "python"], "has_ui": true, "ui_type": "html", "has_tests": false, "test_count": 0, "has_run_script": false, "sub_projects": [], "key_outputs": ["Interactive slide deck", "Collaboration dashboard"], "last_modified": "2025-12", "domain": "work", "outputs": {"html_files": [{"path": "dashboard.html", "file_url": "file:///c:/Users/nfval/Projects/beacon-platform/dashboard.html"}, {"path": "index.html", "file_url": "file:///c:/Users/nfval/Projects/beacon-platform/index.html"}, {"path": "slides.html", "file_url": "file:///c:/Users/nfval/Projects/beacon-platform/slides.html"}], "report_files": [], "output_dirs": [], "launch": []}}, {"name": "benfica-match-digest", "purpose": "Automated post-match digest for SL Benfica delivered to Telegram with highlights from ScoreBat/YouTube.", "status": "mvp-done", "tech_stack": ["python", "telegram-api", "github-actions"], "has_ui": false, "ui_type": "none", "has_tests": true, "test_count": 3, "has_run_script": false, "sub_projects": [], "key_outputs": ["Telegram match digest bot", "GitHub Actions automation"], "last_modified": "2026-01", "domain": "other", "outputs": {"html_files": [], "report_files": [], "output_dirs": [], "launch": []}}, {"name": "beta-reader-sim", "purpose": "Simulates beta reader reactions to fiction manuscripts using Claude API with 4 personas and chapter-level analysis.", "status": "mvp-done", "tech_stack": ["python", "anthropic"], "has_ui": false, "ui_type": "none", "has_tests": true, "test_count": 5, "has_run_script": false, "sub_projects": [], "key_outputs": ["Reader reactions report", "Tension/engagement map", "Character sympathy report"], "last_modified": "2026-01", "domain": "creative-writing", "outputs": {"html_files": [], "report_files": [], "output_dirs": [], "launch": []}}, {"name": "bilingual-stories", "purpose": "Generates print-ready bilingual Portuguese/German PDF bedtime stories for the kids using Claude API.", "status": "mvp-done", "tech_stack": ["python", "anthropic", "xhtml2pdf"], "has_ui": false, "ui_type": "none", "has_tests": true, "test_count": 4, "has_run_script": true, "sub_projects": [], "key_outputs": ["Bilingual PDF story generator", "3 reading levels"], "last_modified": "2026-02", "domain": "family", "outputs": {"html_files": [], "report_files": [], "output_dirs": [], "launch": [{"type": "script", "label": "Run Script", "command": "cd \"c:\\Users\\nfval\\Projects\\bilingual-stories\" && powershell -File run.ps1", "file": "run.ps1"}]}}, {"name": "boardgame-designer", "purpose": "CLI toolkit for designing board games with mechanics library (~60), design tracking, and playtest logging.", "status": "mvp-done", "tech_stack": ["python", "sqlite"], "has_ui": false, "ui_type": "none", "has_tests": true, "test_count": 5, "has_run_script": true, "sub_projects": [], "key_outputs": ["Mechanics reference database", "Design project tracker", "Playtest session logger"], "last_modified": "2026-01", "domain": "gaming", "outputs": {"html_files": [], "report_files": [], "output_dirs": [], "launch": [{"type": "script", "label": "Run Script", "command": "cd \"c:\\Users\\nfval\\Projects\\boardgame-designer\" && powershell -File run.ps1", "file": "run.ps1"}]}}, {"name": "boardgames", "purpose": "Collection of 10+ original board game designs including Council of Selves, Crossings, Fork-Merge, and more.", "status": "active", "tech_stack": ["markdown", "docx"], "has_ui": false, "ui_type": "none", "has_tests": false, "test_count": 0, "has_run_script": false, "sub_projects": ["council-of-selves-unified", "crossings", "fork-merge-bg", "governed", "multiverse-draft", "prime", "protocol", "signal", "the-forge", "the-pitch"], "key_outputs": ["Board game design documents portfolio"], "last_modified": "2026-01", "domain": "gaming", "outputs": {"html_files": [], "report_files": [], "output_dirs": [], "launch": []}}, {"name": "boardgames-catalog", "purpose": "Personal board game collection catalog with play tracking, player scores, and leaderboard.", "status": "active", "tech_stack": ["python", "html"], "has_ui": true, "ui_type": "html", "has_tests": false, "test_count": 0, "has_run_script": false, "sub_projects": [], "key_outputs": ["Board game catalog", "Play session tracker", "Player leaderboard"], "last_modified": "2026-02", "domain": "gaming", "outputs": {"html_files": [], "report_files": [], "output_dirs": [], "launch": []}}, {"name": "book-saga-resumer", "purpose": "Web app where users input a book/series and get a spoiler-free catch-up summary via Claude API.", "status": "wip", "tech_stack": ["nextjs", "typescript", "tailwind", "supabase", "anthropic"], "has_ui": true, "ui_type": "website", "has_tests": false, "test_count": 0, "has_run_script": false, "sub_projects": [], "key_outputs": ["Spoiler-free book recap generator", "Supabase-backed book tracker"], "last_modified": "2026-01", "domain": "learning", "outputs": {"html_files": [], "report_files": [], "output_dirs": [], "launch": [{"type": "nextjs", "label": "Next.js App", "command": "cd \"c:\\Users\\nfval\\Projects\\book-saga-resumer\" && npm run dev", "file": "package.json"}]}}, {"name": "books", "purpose": "Repository of Nuno's book manuscripts - Council of Selves, Councils of Power, Fork-Merge, and more.", "status": "active", "tech_stack": ["markdown", "python", "docx", "html"], "has_ui": false, "ui_type": "none", "has_tests": false, "test_count": 0, "has_run_script": false, "sub_projects": ["council_of_selves", "councils-of-power", "configurations-of-curiosity", "fork-merge", "merge-conflict", "the-codex-vitae-the-book", "the-last-human-skill"], "key_outputs": ["Council of Selves full manuscript", "Visual diagrams", "IOS Quickstart Kit HTML"], "last_modified": "2026-03", "domain": "creative-writing", "outputs": {"html_files": [{"path": "council_of_selves/council-assessment.html", "file_url": "file:///c:/Users/nfval/Projects/books/council_of_selves/council-assessment.html"}, {"path": "council_of_selves/IOS_QUICKSTART_KIT.html", "file_url": "file:///c:/Users/nfval/Projects/books/council_of_selves/IOS_QUICKSTART_KIT.html"}], "report_files": [{"path": "council_of_selves/CoS_Copyedit_Report.md", "file_url": "file:///c:/Users/nfval/Projects/books/council_of_selves/CoS_Copyedit_Report.md"}, {"path": "council_of_selves/editorial-review opus 4.6/5. CoS_Implementation_Report.md", "file_url": "file:///c:/Users/nfval/Projects/books/council_of_selves/editorial-review opus 4.6/5. CoS_Implementation_Report.md"}, {"path": "council_of_selves/editorial-review opus 4.6/8. CoS_Editing_Playbook.md", "file_url": "file:///c:/Users/nfval/Projects/books/council_of_selves/editorial-review opus 4.6/8. CoS_Editing_Playbook.md"}, {"path": "fork-merge/POLISH_COMPLETE_SUMMARY.md", "file_url": "file:///c:/Users/nfval/Projects/books/fork-merge/POLISH_COMPLETE_SUMMARY.md"}, {"path": "fork-merge/integrated/03_chapter_03_the_protocol.md", "file_url": "file:///c:/Users/nfval/Projects/books/fork-merge/integrated/03_chapter_03_the_protocol.md"}, {"path": "merge-conflict/drafts/revision_audit_report.md", "file_url": "file:///c:/Users/nfval/Projects/books/merge-conflict/drafts/revision_audit_report.md"}, {"path": "merge-conflict/drafts/voice_pass_part2_report.md", "file_url": "file:///c:/Users/nfval/Projects/books/merge-conflict/drafts/voice_pass_part2_report.md"}, {"path": "merge-conflict/drafts/voice_pass_part3_report.md", "file_url": "file:///c:/Users/nfval/Projects/books/merge-conflict/drafts/voice_pass_part3_report.md"}, {"path": "merge-conflict/drafts/voice_pass_part4_report.md", "file_url": "file:///c:/Users/nfval/Projects/books/merge-conflict/drafts/voice_pass_part4_report.md"}, {"path": "merge-conflict/drafts/voice_pass_report.md", "file_url": "file:///c:/Users/nfval/Projects/books/merge-conflict/drafts/voice_pass_report.md"}], "output_dirs": [], "launch": []}}, {"name": "books-dashboard", "purpose": "Static HTML dashboard displaying personal reading library from StoryGraph CSV with covers, stats, and filters.", "status": "mvp-done", "tech_stack": ["html", "javascript", "python"], "has_ui": true, "ui_type": "html", "has_tests": false, "test_count": 0, "has_run_script": false, "sub_projects": [], "key_outputs": ["Reading dashboard (GitHub Pages)", "365-book library browser"], "last_modified": "2026-02", "domain": "learning", "outputs": {"html_files": [{"path": "index.html", "file_url": "file:///c:/Users/nfval/Projects/books-dashboard/index.html"}], "report_files": [], "output_dirs": [], "launch": []}}, {"name": "chore-quest", "purpose": "Gamified chore tracking web app for kids with points, rewards shop, admin approval, and leaderboard.", "status": "mvp-done", "tech_stack": ["python", "flask", "html", "javascript"], "has_ui": true, "ui_type": "html", "has_tests": true, "test_count": 7, "has_run_script": true, "sub_projects": [], "key_outputs": ["Kid dashboards", "Rewards shop", "Admin approval panel", "Leaderboard"], "last_modified": "2026-02", "domain": "family", "outputs": {"html_files": [{"path": "templates/admin.html", "file_url": "file:///c:/Users/nfval/Projects/chore-quest/templates/admin.html"}, {"path": "templates/base.html", "file_url": "file:///c:/Users/nfval/Projects/chore-quest/templates/base.html"}, {"path": "templates/home.html", "file_url": "file:///c:/Users/nfval/Projects/chore-quest/templates/home.html"}, {"path": "templates/kid_dashboard.html", "file_url": "file:///c:/Users/nfval/Projects/chore-quest/templates/kid_dashboard.html"}, {"path": "templates/leaderboard.html", "file_url": "file:///c:/Users/nfval/Projects/chore-quest/templates/leaderboard.html"}], "report_files": [], "output_dirs": [], "launch": [{"type": "flask", "label": "Flask App", "command": "cd \"c:\\Users\\nfval\\Projects\\chore-quest\" && python app.py", "file": "app.py"}, {"type": "script", "label": "Run Script", "command": "cd \"c:\\Users\\nfval\\Projects\\chore-quest\" && powershell -File run.ps1", "file": "run.ps1"}]}}, {"name": "claude-memory", "purpose": "Persistent memory system and Lumi Dashboard infrastructure - stores memories, manages projects, hosts dashboard.", "status": "active", "tech_stack": ["python", "html", "javascript", "chartjs"], "has_ui": true, "ui_type": "dashboard", "has_tests": true, "test_count": 7, "has_run_script": false, "sub_projects": ["scheduled_tasks", "worker", "tools", "setup"], "key_outputs": ["Lumi Dashboard (GitHub Pages)", "Memory CLI", "Weekly briefing system"], "last_modified": "2026-03", "domain": "infrastructure", "outputs": {"html_files": [{"path": "dashboard.html", "file_url": "file:///c:/Users/nfval/Projects/claude-memory/dashboard.html"}, {"path": "index.html", "file_url": "file:///c:/Users/nfval/Projects/claude-memory/index.html"}, {"path": "mockups/dashboard_v2_mockup.html", "file_url": "file:///c:/Users/nfval/Projects/claude-memory/mockups/dashboard_v2_mockup.html"}, {"path": "tools/fasting-timer.html", "file_url": "file:///c:/Users/nfval/Projects/claude-memory/tools/fasting-timer.html"}, {"path": "tools/index.html", "file_url": "file:///c:/Users/nfval/Projects/claude-memory/tools/index.html"}, {"path": "tools/sinus-trigger-log.html", "file_url": "file:///c:/Users/nfval/Projects/claude-memory/tools/sinus-trigger-log.html"}, {"path": "tools/sleep-debt-tracker.html", "file_url": "file:///c:/Users/nfval/Projects/claude-memory/tools/sleep-debt-tracker.html"}, {"path": "tools/unit-converter.html", "file_url": "file:///c:/Users/nfval/Projects/claude-memory/tools/unit-converter.html"}, {"path": "tools/zone2-hr-calculator.html", "file_url": "file:///c:/Users/nfval/Projects/claude-memory/tools/zone2-hr-calculator.html"}], "report_files": [{"path": "data/gtdm_summary.md", "file_url": "file:///c:/Users/nfval/Projects/claude-memory/data/gtdm_summary.md"}, {"path": "memories/handoffs/benfica-match-digest.md", "file_url": "file:///c:/Users/nfval/Projects/claude-memory/memories/handoffs/benfica-match-digest.md"}, {"path": "memories/handoffs/nightly-briefing.md", "file_url": "file:///c:/Users/nfval/Projects/claude-memory/memories/handoffs/nightly-briefing.md"}, {"path": "memories/handoffs/personal-changelog.md", "file_url": "file:///c:/Users/nfval/Projects/claude-memory/memories/handoffs/personal-changelog.md"}, {"path": "memories/ideas/benfica-match-digest.md", "file_url": "file:///c:/Users/nfval/Projects/claude-memory/memories/ideas/benfica-match-digest.md"}, {"path": "memories/ideas/cross-project-weekly-digest.md", "file_url": "file:///c:/Users/nfval/Projects/claude-memory/memories/ideas/cross-project-weekly-digest.md"}, {"path": "memories/ideas/family-emergency-protocol.md", "file_url": "file:///c:/Users/nfval/Projects/claude-memory/memories/ideas/family-emergency-protocol.md"}, {"path": "memories/ideas/nightly-business-briefing.md", "file_url": "file:///c:/Users/nfval/Projects/claude-memory/memories/ideas/nightly-business-briefing.md"}, {"path": "memories/ideas/personal-changelog.md", "file_url": "file:///c:/Users/nfval/Projects/claude-memory/memories/ideas/personal-changelog.md"}, {"path": "memories/ideas/ppt-digester.md", "file_url": "file:///c:/Users/nfval/Projects/claude-memory/memories/ideas/ppt-digester.md"}, {"path": "memories/ideas/weekly-calendar-briefing.md", "file_url": "file:///c:/Users/nfval/Projects/claude-memory/memories/ideas/weekly-calendar-briefing.md"}, {"path": "memories/sessions/2026-02-10_21-41_personal-changelog.md", "file_url": "file:///c:/Users/nfval/Projects/claude-memory/memories/sessions/2026-02-10_21-41_personal-changelog.md"}], "output_dirs": [{"path": "data/output", "files": ["observatory_catalog.json"]}], "launch": [{"type": "web", "label": "Live Site", "url": "https://lumi.nunovalerio.com", "file": "CNAME"}]}}, {"name": "codex-vitae", "purpose": "Living document of personal beliefs, predictions, and principles across 10 domains with calibration scoring.", "status": "active", "tech_stack": ["python", "markdown", "json"], "has_ui": false, "ui_type": "none", "has_tests": false, "test_count": 0, "has_run_script": false, "sub_projects": [], "key_outputs": ["10-domain belief system", "Prediction registry", "What Would Nuno Say test cases"], "last_modified": "2026-02", "domain": "personal-brand", "outputs": {"html_files": [], "report_files": [], "output_dirs": [], "launch": []}}, {"name": "content-dashboard", "purpose": "Next.js content analytics dashboard with social media, podcast stats, thumbnails, voice profiles, and content pipeline.", "status": "active", "tech_stack": ["nextjs", "typescript", "tailwind", "shadcn", "sentry", "posthog"], "has_ui": true, "ui_type": "dashboard", "has_tests": false, "test_count": 0, "has_run_script": true, "sub_projects": [], "key_outputs": ["Social media analytics dashboard", "Podcast stats", "Content pipeline tracker"], "last_modified": "2026-03", "domain": "content-creation", "outputs": {"html_files": [], "report_files": [], "output_dirs": [], "launch": [{"type": "nextjs", "label": "Next.js App", "command": "cd \"c:\\Users\\nfval\\Projects\\content-dashboard\" && npm run dev", "file": "package.json"}, {"type": "script", "label": "Run Script", "command": "cd \"c:\\Users\\nfval\\Projects\\content-dashboard\" && powershell -File run.ps1", "file": "run.ps1"}]}}, {"name": "content-humanizer", "purpose": "CLI tool that detects AI artifacts in text and rewrites it to sound human with 6 channel-specific styles.", "status": "mvp-done", "tech_stack": ["python", "anthropic"], "has_ui": false, "ui_type": "none", "has_tests": true, "test_count": 3, "has_run_script": true, "sub_projects": [], "key_outputs": ["AI-tell pattern detector", "LLM rewriter", "6 channel configs"], "last_modified": "2026-01", "domain": "content-creation", "outputs": {"html_files": [], "report_files": [], "output_dirs": [], "launch": [{"type": "script", "label": "Run Script", "command": "cd \"c:\\Users\\nfval\\Projects\\content-humanizer\" && powershell -File run.ps1", "file": "run.ps1"}]}}, {"name": "courses-library", "purpose": "Stores and manages course materials extracted from PPT/PDF files across 19 course folders.", "status": "mvp-done", "tech_stack": ["python"], "has_ui": false, "ui_type": "none", "has_tests": false, "test_count": 0, "has_run_script": false, "sub_projects": [], "key_outputs": ["PPT/PDF content extractor", "19 course material folders"], "last_modified": "2025-12", "domain": "learning", "outputs": {"html_files": [], "report_files": [{"path": "data/materials/natural-speaking-lab/coaching-protocol.md", "file_url": "file:///c:/Users/nfval/Projects/courses-library/data/materials/natural-speaking-lab/coaching-protocol.md"}, {"path": "data/materials/natural-speaking-lab/curriculum-overview.md", "file_url": "file:///c:/Users/nfval/Projects/courses-library/data/materials/natural-speaking-lab/curriculum-overview.md"}, {"path": "data/materials/parenting-parts-work/repair-protocol-card.md", "file_url": "file:///c:/Users/nfval/Projects/courses-library/data/materials/parenting-parts-work/repair-protocol-card.md"}], "output_dirs": [], "launch": []}}, {"name": "cover-art-brief", "purpose": "Analyzes book manuscripts and generates creative briefs for cover designers with mood boards from museum APIs.", "status": "mvp-done", "tech_stack": ["python", "anthropic"], "has_ui": false, "ui_type": "none", "has_tests": true, "test_count": 7, "has_run_script": true, "sub_projects": [], "key_outputs": ["Markdown creative brief", "Self-contained HTML mood board", "Museum API art search"], "last_modified": "2026-01", "domain": "creative-writing", "outputs": {"html_files": [], "report_files": [], "output_dirs": [], "launch": [{"type": "script", "label": "Run Script", "command": "cd \"c:\\Users\\nfval\\Projects\\cover-art-brief\" && powershell -File run.ps1", "file": "run.ps1"}]}}, {"name": "deutsch-engine", "purpose": "German learning tool for A2-to-B1 progression with spaced repetition (SM-2) and LLM-powered sentence feedback.", "status": "wip", "tech_stack": ["python", "sqlite", "yaml", "openai"], "has_ui": false, "ui_type": "none", "has_tests": true, "test_count": 0, "has_run_script": false, "sub_projects": [], "key_outputs": ["SRS vocabulary review", "Grammar drills", "LLM sentence evaluation"], "last_modified": "2026-02", "domain": "learning", "outputs": {"html_files": [], "report_files": [], "output_dirs": [], "launch": [{"type": "script", "label": "Run Script", "command": "cd \"c:\\Users\\nfval\\Projects\\deutsch-engine\" && powershell -File run.ps1", "file": "run.ps1"}]}}, {"name": "digital-estate-planner", "purpose": "Inventories all digital accounts, subscriptions, domains, and assets with encrypted vault for emergency access.", "status": "mvp-done", "tech_stack": ["python", "json", "aes-256-gcm"], "has_ui": false, "ui_type": "none", "has_tests": true, "test_count": 6, "has_run_script": true, "sub_projects": [], "key_outputs": ["Encrypted vault", "Emergency export for Karo", "Dashboard sync"], "last_modified": "2026-02", "domain": "family", "outputs": {"html_files": [], "report_files": [], "output_dirs": [], "launch": [{"type": "script", "label": "Run Script", "command": "cd \"c:\\Users\\nfval\\Projects\\digital-estate-planner\" && powershell -File run.ps1", "file": "run.ps1"}]}}, {"name": "expertise-monetization", "purpose": "Maps expertise domains to revenue pathways, scoring ROI and identifying gaps.", "status": "wip", "tech_stack": ["python", "json"], "has_ui": false, "ui_type": "none", "has_tests": true, "test_count": 3, "has_run_script": true, "sub_projects": [], "key_outputs": ["Expertise-to-revenue matrix", "Gap analysis", "Dashboard JSON"], "last_modified": "2026-02", "domain": "personal-brand", "outputs": {"html_files": [], "report_files": [], "output_dirs": [], "launch": [{"type": "script", "label": "Run Script", "command": "cd \"c:\\Users\\nfval\\Projects\\expertise-monetization\" && powershell -File run.ps1", "file": "run.ps1"}]}}, {"name": "family-dashboard", "purpose": "Next.js web dashboard for family data including legacy letters, recipes, chores, emergency contacts, and stories.", "status": "active", "tech_stack": ["typescript", "nextjs", "react", "radix-ui", "tailwindcss"], "has_ui": true, "ui_type": "dashboard", "has_tests": false, "test_count": 0, "has_run_script": false, "sub_projects": [], "key_outputs": ["Family dashboard web app", "Letters page", "Recipes page", "Chores page"], "last_modified": "2026-03", "domain": "family", "outputs": {"html_files": [], "report_files": [], "output_dirs": [], "launch": [{"type": "nextjs", "label": "Next.js App", "command": "cd \"c:\\Users\\nfval\\Projects\\family-dashboard\" && npm run dev", "file": "package.json"}, {"type": "script", "label": "Run Script", "command": "cd \"c:\\Users\\nfval\\Projects\\family-dashboard\" && powershell -File run.ps1", "file": "run.ps1"}]}}, {"name": "family-emergency-protocol", "purpose": "Generates a single self-contained offline HTML emergency protocol with print-friendly laminated card layout.", "status": "mvp-done", "tech_stack": ["python", "html"], "has_ui": true, "ui_type": "html", "has_tests": false, "test_count": 0, "has_run_script": true, "sub_projects": [], "key_outputs": ["Offline HTML emergency protocol", "Print-friendly laminated card"], "last_modified": "2026-02", "domain": "family", "outputs": {"html_files": [{"path": "output/emergency_protocol.html", "file_url": "file:///c:/Users/nfval/Projects/family-emergency-protocol/output/emergency_protocol.html"}], "report_files": [], "output_dirs": [], "launch": [{"type": "script", "label": "Run Script", "command": "cd \"c:\\Users\\nfval\\Projects\\family-emergency-protocol\" && powershell -File run.ps1", "file": "run.ps1"}]}}, {"name": "family-rituals", "purpose": "Playbook and tracking system for meaningful family connection rituals designed for alternating custody weekends.", "status": "active", "tech_stack": ["markdown"], "has_ui": false, "ui_type": "none", "has_tests": false, "test_count": 0, "has_run_script": false, "sub_projects": ["birthday-interviews"], "key_outputs": ["Ritual playbook", "Birthday interview template", "Tracking sheet"], "last_modified": "2026-02", "domain": "family", "outputs": {"html_files": [], "report_files": [{"path": "playbook.md", "file_url": "file:///c:/Users/nfval/Projects/family-rituals/playbook.md"}], "output_dirs": [], "launch": []}}, {"name": "family-time-capsule", "purpose": "Record voice/text messages, photos, and milestones for children with encrypted vaults and Telegram bot capture.", "status": "wip", "tech_stack": ["python", "sqlite", "telegram-bot", "age-encryption"], "has_ui": false, "ui_type": "none", "has_tests": true, "test_count": 2, "has_run_script": false, "sub_projects": [], "key_outputs": ["Per-child encrypted vaults", "Telegram bot for capture", "Year-in-review generator"], "last_modified": "2026-02", "domain": "family", "outputs": {"html_files": [], "report_files": [], "output_dirs": [], "launch": []}}, {"name": "finance-dashboard", "purpose": "Next.js financial dashboard with budget, BTC, FI tracker, villa, renewals, lifestyle, estate, and analytics.", "status": "active", "tech_stack": ["typescript", "nextjs", "react", "radix-ui", "tailwindcss", "recharts", "redux-toolkit"], "has_ui": true, "ui_type": "dashboard", "has_tests": false, "test_count": 0, "has_run_script": false, "sub_projects": [], "key_outputs": ["Multi-page finance dashboard", "Budget tracker", "FI tracker"], "last_modified": "2026-03", "domain": "finance", "outputs": {"html_files": [], "report_files": [], "output_dirs": [], "launch": [{"type": "nextjs", "label": "Next.js App", "command": "cd \"c:\\Users\\nfval\\Projects\\finance-dashboard\" && npm run dev", "file": "package.json"}, {"type": "script", "label": "Run Script", "command": "cd \"c:\\Users\\nfval\\Projects\\finance-dashboard\" && powershell -File run.ps1", "file": "run.ps1"}]}}, {"name": "forge-dashboard", "purpose": "Next.js creative writing dashboard with IP portfolio, book launch, board game design, manuscripts, and story bible.", "status": "active", "tech_stack": ["typescript", "nextjs", "react", "radix-ui", "tailwindcss"], "has_ui": true, "ui_type": "dashboard", "has_tests": false, "test_count": 0, "has_run_script": false, "sub_projects": [], "key_outputs": ["Creative writing dashboard", "IP portfolio page", "Book launch tracker"], "last_modified": "2026-03", "domain": "creative-writing", "outputs": {"html_files": [], "report_files": [], "output_dirs": [], "launch": [{"type": "nextjs", "label": "Next.js App", "command": "cd \"c:\\Users\\nfval\\Projects\\forge-dashboard\" && npm run dev", "file": "package.json"}, {"type": "script", "label": "Run Script", "command": "cd \"c:\\Users\\nfval\\Projects\\forge-dashboard\" && powershell -File run.ps1", "file": "run.ps1"}]}}, {"name": "genome-explorer", "purpose": "React SPA for browsing genomic analysis findings from the genome-insight pipeline via drag-drop file picker.", "status": "mvp-done", "tech_stack": ["typescript", "react", "vite", "tailwindcss", "recharts"], "has_ui": true, "ui_type": "website", "has_tests": false, "test_count": 0, "has_run_script": false, "sub_projects": [], "key_outputs": ["Genomic findings browser SPA", "Data visualization dashboard"], "last_modified": "2026-02", "domain": "health", "outputs": {"html_files": [{"path": "index.html", "file_url": "file:///c:/Users/nfval/Projects/genome-explorer/index.html"}], "report_files": [], "output_dirs": [], "launch": []}}, {"name": "genome-insight", "purpose": "Pipeline that ingests consumer genotyping exports and produces interpretable health reports grounded in ClinVar and PharmGKB.", "status": "active", "tech_stack": ["python", "clinvar", "pharmgkb"], "has_ui": false, "ui_type": "none", "has_tests": true, "test_count": 8, "has_run_script": false, "sub_projects": ["reference_implementations"], "key_outputs": ["Genetic report", "Disease risk report", "Action protocol", "Findings JSON"], "last_modified": "2026-02", "domain": "health", "outputs": {"html_files": [], "report_files": [{"path": "reports/sample_test/action_protocol.md", "file_url": "file:///c:/Users/nfval/Projects/genome-insight/reports/sample_test/action_protocol.md"}, {"path": "reports/sample_test/disease_risk_report.md", "file_url": "file:///c:/Users/nfval/Projects/genome-insight/reports/sample_test/disease_risk_report.md"}, {"path": "reports/sample_test/genetic_report.md", "file_url": "file:///c:/Users/nfval/Projects/genome-insight/reports/sample_test/genetic_report.md"}, {"path": "reports/test_output/action_protocol.md", "file_url": "file:///c:/Users/nfval/Projects/genome-insight/reports/test_output/action_protocol.md"}, {"path": "reports/test_output/disease_risk_report.md", "file_url": "file:///c:/Users/nfval/Projects/genome-insight/reports/test_output/disease_risk_report.md"}, {"path": "reports/test_output/genetic_report.md", "file_url": "file:///c:/Users/nfval/Projects/genome-insight/reports/test_output/genetic_report.md"}, {"path": "reports/test_vcf/action_protocol.md", "file_url": "file:///c:/Users/nfval/Projects/genome-insight/reports/test_vcf/action_protocol.md"}, {"path": "reports/test_vcf/disease_risk_report.md", "file_url": "file:///c:/Users/nfval/Projects/genome-insight/reports/test_vcf/disease_risk_report.md"}, {"path": "reports/test_vcf/genetic_report.md", "file_url": "file:///c:/Users/nfval/Projects/genome-insight/reports/test_vcf/genetic_report.md"}, {"path": "reports/test_vcf/health_crossref_report.md", "file_url": "file:///c:/Users/nfval/Projects/genome-insight/reports/test_vcf/health_crossref_report.md"}], "output_dirs": [], "launch": []}}, {"name": "german-bureaucracy-tracker", "purpose": "Models German admin processes as state machines with deadline tracking and document checklists.", "status": "mvp-done", "tech_stack": ["python", "sqlite"], "has_ui": false, "ui_type": "none", "has_tests": true, "test_count": 4, "has_run_script": true, "sub_projects": [], "key_outputs": ["5 German process state machines", "Deadline calculator", "Document checklist tracker"], "last_modified": "2026-02", "domain": "other", "outputs": {"html_files": [], "report_files": [], "output_dirs": [], "launch": [{"type": "script", "label": "Run Script", "command": "cd \"c:\\Users\\nfval\\Projects\\german-bureaucracy-tracker\" && powershell -File run.ps1", "file": "run.ps1"}]}}, {"name": "growth-os", "purpose": "Unified system for creative/intellectual growth with 4 modules: Reading, Fiction Analysis, Philosophical Sparring, Experiments.", "status": "mvp-done", "tech_stack": ["python", "notion-api"], "has_ui": false, "ui_type": "none", "has_tests": false, "test_count": 0, "has_run_script": true, "sub_projects": ["reading", "fiction", "sparring", "experiments"], "key_outputs": ["Reading pipeline", "Fiction analysis framework", "Philosophical sparring engine"], "last_modified": "2026-02", "domain": "learning", "outputs": {"html_files": [], "report_files": [{"path": "templates/experiment_protocol.md", "file_url": "file:///c:/Users/nfval/Projects/growth-os/templates/experiment_protocol.md"}], "output_dirs": [], "launch": [{"type": "script", "label": "Run Script", "command": "cd \"c:\\Users\\nfval\\Projects\\growth-os\" && powershell -File run.ps1", "file": "run.ps1"}]}}, {"name": "head-of-innovation", "purpose": "Operating system for the Head of Innovation role with decision infrastructure, templates, and deployment playbooks.", "status": "wip", "tech_stack": ["markdown"], "has_ui": false, "ui_type": "none", "has_tests": false, "test_count": 0, "has_run_script": false, "sub_projects": [], "key_outputs": ["Implementation plan", "7 templates", "Week 1 playbook"], "last_modified": "2026-02", "domain": "work", "outputs": {"html_files": [], "report_files": [{"path": "WEEK1_PLAYBOOK.md", "file_url": "file:///c:/Users/nfval/Projects/head-of-innovation/WEEK1_PLAYBOOK.md"}], "output_dirs": [], "launch": []}}, {"name": "health-dashboard", "purpose": "Next.js health dashboard with circadian, heart data, Apple Health, supplements, biomarkers, genetics, and sleep.", "status": "active", "tech_stack": ["typescript", "nextjs", "react", "radix-ui", "tailwindcss"], "has_ui": true, "ui_type": "dashboard", "has_tests": false, "test_count": 0, "has_run_script": false, "sub_projects": [], "key_outputs": ["Health dashboard web app", "Circadian page", "Biomarkers page", "Genetics page"], "last_modified": "2026-03", "domain": "health", "outputs": {"html_files": [], "report_files": [], "output_dirs": [], "launch": [{"type": "nextjs", "label": "Next.js App", "command": "cd \"c:\\Users\\nfval\\Projects\\health-dashboard\" && npm run dev", "file": "package.json"}, {"type": "script", "label": "Run Script", "command": "cd \"c:\\Users\\nfval\\Projects\\health-dashboard\" && powershell -File run.ps1", "file": "run.ps1"}]}}, {"name": "health_longevity_os", "purpose": "Health and longevity system with Notion-backed databases for training, supplements, bloodwork, and analytics.", "status": "mvp-done", "tech_stack": ["python", "notion-api"], "has_ui": false, "ui_type": "none", "has_tests": true, "test_count": 5, "has_run_script": false, "sub_projects": ["training", "supplements", "bloodwork", "analytics"], "key_outputs": ["9 Notion databases", "Training logger", "Supplement tracker", "Longevity audit"], "last_modified": "2026-02", "domain": "health", "outputs": {"html_files": [{"path": "tools/fasting-timer.html", "file_url": "file:///c:/Users/nfval/Projects/health_longevity_os/tools/fasting-timer.html"}, {"path": "tools/index.html", "file_url": "file:///c:/Users/nfval/Projects/health_longevity_os/tools/index.html"}, {"path": "tools/sinus-trigger-log.html", "file_url": "file:///c:/Users/nfval/Projects/health_longevity_os/tools/sinus-trigger-log.html"}, {"path": "tools/sleep-debt-tracker.html", "file_url": "file:///c:/Users/nfval/Projects/health_longevity_os/tools/sleep-debt-tracker.html"}, {"path": "tools/unit-converter.html", "file_url": "file:///c:/Users/nfval/Projects/health_longevity_os/tools/unit-converter.html"}, {"path": "tools/zone2-hr-calculator.html", "file_url": "file:///c:/Users/nfval/Projects/health_longevity_os/tools/zone2-hr-calculator.html"}], "report_files": [], "output_dirs": [], "launch": [{"type": "script", "label": "Run Script", "command": "cd \"c:\\Users\\nfval\\Projects\\health_longevity_os\" && powershell -File run.ps1", "file": "run.ps1"}]}}, {"name": "homework-helper-api", "purpose": "LLM-powered homework helper with web UI for kids, using Socratic-style guided learning.", "status": "wip", "tech_stack": ["python", "html", "sqlite", "openai"], "has_ui": true, "ui_type": "html", "has_tests": true, "test_count": 2, "has_run_script": true, "sub_projects": [], "key_outputs": ["Homework helper web interface", "Socratic prompting engine"], "last_modified": "2026-02", "domain": "family", "outputs": {"html_files": [{"path": "static/index.html", "file_url": "file:///c:/Users/nfval/Projects/homework-helper-api/static/index.html"}, {"path": "static/parent.html", "file_url": "file:///c:/Users/nfval/Projects/homework-helper-api/static/parent.html"}], "report_files": [], "output_dirs": [], "launch": [{"type": "fastapi", "label": "FastAPI App", "command": "cd \"c:\\Users\\nfval\\Projects\\homework-helper-api\" && uvicorn main:app --reload", "file": "main.py"}, {"type": "script", "label": "Run Script", "command": "cd \"c:\\Users\\nfval\\Projects\\homework-helper-api\" && powershell -File run.ps1", "file": "run.ps1"}]}}, {"name": "image-studio", "purpose": "AI image generation studio with session-based workflow using Replicate/FLUX models.", "status": "wip", "tech_stack": ["python", "sqlite", "replicate"], "has_ui": false, "ui_type": "none", "has_tests": true, "test_count": 7, "has_run_script": true, "sub_projects": [], "key_outputs": ["Image generation CLI", "Session manager", "Iteration chain tracking"], "last_modified": "2026-02", "domain": "content-creation", "outputs": {"html_files": [], "report_files": [], "output_dirs": [], "launch": [{"type": "script", "label": "Run Script", "command": "cd \"c:\\Users\\nfval\\Projects\\image-studio\" && powershell -File run.ps1", "file": "run.ps1"}]}}, {"name": "inner-council", "purpose": "Emotional Intelligence OS with 5 interactive AI-powered emotional support protocols and SQLite journal.", "status": "mvp-done", "tech_stack": ["python", "sqlite", "yaml", "notion-api", "openai"], "has_ui": false, "ui_type": "none", "has_tests": false, "test_count": 0, "has_run_script": true, "sub_projects": [], "key_outputs": ["5 emotional support protocols", "SQLite emotional journal", "Notion sync"], "last_modified": "2026-02", "domain": "health", "outputs": {"html_files": [], "report_files": [], "output_dirs": [], "launch": [{"type": "script", "label": "Run Script", "command": "cd \"c:\\Users\\nfval\\Projects\\inner-council\" && powershell -File run.ps1", "file": "run.ps1"}]}}, {"name": "innovation-analyzer", "purpose": "Parses monthly R&D PowerPoint decks, extracts project data from 131+ slides, generates executive digests and alerts.", "status": "mvp-done", "tech_stack": ["python", "python-pptx"], "has_ui": false, "ui_type": "none", "has_tests": false, "test_count": 0, "has_run_script": true, "sub_projects": [], "key_outputs": ["PPT parser for 93 projects", "Executive digest", "RQS focus view", "Anomaly alerts"], "last_modified": "2026-02", "domain": "work", "outputs": {"html_files": [{"path": "reports/portfolio.html", "file_url": "file:///c:/Users/nfval/Projects/innovation-analyzer/reports/portfolio.html"}, {"path": "reports/portfolio_protected.html", "file_url": "file:///c:/Users/nfval/Projects/innovation-analyzer/reports/portfolio_protected.html"}, {"path": "reports/_debug_page.html", "file_url": "file:///c:/Users/nfval/Projects/innovation-analyzer/reports/_debug_page.html"}], "report_files": [{"path": "ANALYSIS_SUMMARY.md", "file_url": "file:///c:/Users/nfval/Projects/innovation-analyzer/ANALYSIS_SUMMARY.md"}, {"path": "reports/digest.md", "file_url": "file:///c:/Users/nfval/Projects/innovation-analyzer/reports/digest.md"}], "output_dirs": [], "launch": [{"type": "script", "label": "Run Script", "command": "cd \"c:\\Users\\nfval\\Projects\\innovation-analyzer\" && powershell -File run.ps1", "file": "run.ps1"}]}}, {"name": "innovation-portfolio", "purpose": "ATLAS Innovation Portfolio - single-page HTML app for visualizing and managing an innovation portfolio.", "status": "mvp-done", "tech_stack": ["html", "css", "javascript", "chartjs"], "has_ui": true, "ui_type": "html", "has_tests": false, "test_count": 0, "has_run_script": false, "sub_projects": [], "key_outputs": ["Self-contained HTML innovation portfolio viewer"], "last_modified": "2026-02", "domain": "work", "outputs": {"html_files": [{"path": "index.html", "file_url": "file:///c:/Users/nfval/Projects/innovation-portfolio/index.html"}], "report_files": [], "output_dirs": [], "launch": []}}, {"name": "innovation-readiness", "purpose": "Self-contained HTML innovation readiness assessment tool with interactive charts and scoring.", "status": "mvp-done", "tech_stack": ["html", "css", "javascript", "chartjs"], "has_ui": true, "ui_type": "html", "has_tests": false, "test_count": 0, "has_run_script": false, "sub_projects": [], "key_outputs": ["Innovation readiness assessment tool"], "last_modified": "2026-02", "domain": "work", "outputs": {"html_files": [{"path": "index.html", "file_url": "file:///c:/Users/nfval/Projects/innovation-readiness/index.html"}], "report_files": [], "output_dirs": [], "launch": []}}, {"name": "investment-simulator", "purpose": "Streamlit investment simulator with Monte Carlo engine, backtesting, projections, and risk dashboard.", "status": "mvp-done", "tech_stack": ["python", "streamlit", "sqlite"], "has_ui": true, "ui_type": "streamlit", "has_tests": false, "test_count": 0, "has_run_script": true, "sub_projects": [], "key_outputs": ["Monte Carlo simulation engine", "Backtester", "Risk dashboard"], "last_modified": "2026-02", "domain": "finance", "outputs": {"html_files": [], "report_files": [], "output_dirs": [], "launch": [{"type": "streamlit", "label": "Streamlit App", "command": "cd \"c:\\Users\\nfval\\Projects\\investment-simulator\" && streamlit run app.py", "file": "app.py"}, {"type": "script", "label": "Run Script", "command": "cd \"c:\\Users\\nfval\\Projects\\investment-simulator\" && powershell -File run.ps1", "file": "run.ps1"}]}}, {"name": "ip-map", "purpose": "React-based interactive IP map visualization using flow diagrams to map creative/business IP assets.", "status": "wip", "tech_stack": ["typescript", "react", "vite", "tailwindcss", "xyflow", "recharts"], "has_ui": true, "ui_type": "website", "has_tests": false, "test_count": 0, "has_run_script": false, "sub_projects": [], "key_outputs": ["Interactive IP flow map visualization"], "last_modified": "2026-03", "domain": "creative-writing", "outputs": {"html_files": [{"path": "index.html", "file_url": "file:///c:/Users/nfval/Projects/ip-map/index.html"}], "report_files": [], "output_dirs": [], "launch": [{"type": "script", "label": "Run Script", "command": "cd \"c:\\Users\\nfval\\Projects\\ip-map\" && powershell -File run.ps1", "file": "run.ps1"}]}}, {"name": "knowledge-base", "purpose": "RAG-style knowledge base with chunking, embedding, and retrieval for ingesting and searching personal documents.", "status": "mvp-done", "tech_stack": ["python", "sqlite", "openai-embeddings"], "has_ui": false, "ui_type": "none", "has_tests": true, "test_count": 3, "has_run_script": true, "sub_projects": [], "key_outputs": ["Document ingestion pipeline", "Semantic search", "Dashboard sync JSON"], "last_modified": "2026-02", "domain": "ai-tools", "outputs": {"html_files": [], "report_files": [], "output_dirs": [], "launch": [{"type": "script", "label": "Run Script", "command": "cd \"c:\\Users\\nfval\\Projects\\knowledge-base\" && powershell -File run.ps1", "file": "run.ps1"}]}}, {"name": "learning-path-architect", "purpose": "Structured learning path management with progress tracking and dashboard sync.", "status": "mvp-done", "tech_stack": ["python", "json"], "has_ui": false, "ui_type": "none", "has_tests": true, "test_count": 7, "has_run_script": true, "sub_projects": [], "key_outputs": ["Learning path JSON store", "Progress tracker", "Markdown reports"], "last_modified": "2026-02", "domain": "learning", "outputs": {"html_files": [], "report_files": [], "output_dirs": [], "launch": [{"type": "script", "label": "Run Script", "command": "cd \"c:\\Users\\nfval\\Projects\\learning-path-architect\" && powershell -File run.ps1", "file": "run.ps1"}]}}, {"name": "legacy-letter-engine", "purpose": "Bilingual letter-writing system with curated prompts for writing letters to the kids about values, life lessons, and family history.", "status": "mvp-done", "tech_stack": ["python", "markdown"], "has_ui": false, "ui_type": "none", "has_tests": true, "test_count": 3, "has_run_script": true, "sub_projects": [], "key_outputs": ["20 bilingual prompt library", "Letter versioning system", "Coverage stats"], "last_modified": "2026-02", "domain": "family", "outputs": {"html_files": [], "report_files": [], "output_dirs": [], "launch": [{"type": "script", "label": "Run Script", "command": "cd \"c:\\Users\\nfval\\Projects\\legacy-letter-engine\" && powershell -File run.ps1", "file": "run.ps1"}]}}, {"name": "life-in-pixels", "purpose": "Year-in-pixels mood/energy/productivity tracker with GitHub-style pixel grid and poster export.", "status": "wip", "tech_stack": ["python", "fastapi", "sqlite", "react", "typescript", "vite", "tailwind"], "has_ui": true, "ui_type": "dashboard", "has_tests": true, "test_count": 3, "has_run_script": true, "sub_projects": ["backend", "frontend"], "key_outputs": ["REST API", "Pixel grid visualization", "PNG poster export", "Notion import"], "last_modified": "2026-02", "domain": "health", "outputs": {"html_files": [{"path": "frontend/index.html", "file_url": "file:///c:/Users/nfval/Projects/life-in-pixels/frontend/index.html"}], "report_files": [], "output_dirs": [], "launch": [{"type": "fastapi", "label": "FastAPI App", "command": "cd \"c:\\Users\\nfval\\Projects\\life-in-pixels\" && uvicorn main:app --reload", "file": "main.py"}, {"type": "script", "label": "Run Script", "command": "cd \"c:\\Users\\nfval\\Projects\\life-in-pixels\" && powershell -File run.ps1", "file": "run.ps1"}]}}, {"name": "lifestyle-cost-simulator", "purpose": "Monte Carlo what-if simulator for life decisions, ingesting GoodBudget spending history.", "status": "mvp-done", "tech_stack": ["python", "yaml"], "has_ui": false, "ui_type": "none", "has_tests": true, "test_count": 4, "has_run_script": true, "sub_projects": [], "key_outputs": ["Monte Carlo simulation engine", "YAML scenario definitions", "5 life scenarios"], "last_modified": "2026-02", "domain": "finance", "outputs": {"html_files": [], "report_files": [], "output_dirs": [], "launch": [{"type": "script", "label": "Run Script", "command": "cd \"c:\\Users\\nfval\\Projects\\lifestyle-cost-simulator\" && powershell -File run.ps1", "file": "run.ps1"}]}}, {"name": "lotm-content", "purpose": "Content pipeline for Leaders of the Multiverse YouTube channel: scripts, teleprompter packs, episode atomizer, quote library.", "status": "active", "tech_stack": ["python", "notion-api"], "has_ui": false, "ui_type": "none", "has_tests": true, "test_count": 4, "has_run_script": false, "sub_projects": ["episode-atomizer", "quote-library", "teleprompter-pack"], "key_outputs": ["Content pipeline", "Episode atomizer", "Quote library", "Teleprompter packs"], "last_modified": "2026-02", "domain": "content-creation", "outputs": {"html_files": [], "report_files": [], "output_dirs": [], "launch": []}}, {"name": "lumi-dashboard", "purpose": "Static HTML dashboard at lumi.nunovalerio.com with health/productivity tools.", "status": "active", "tech_stack": ["html", "css", "javascript", "github-pages"], "has_ui": true, "ui_type": "website", "has_tests": false, "test_count": 0, "has_run_script": false, "sub_projects": ["tools"], "key_outputs": ["Fasting timer", "Zone2 HR calculator", "Sleep debt tracker", "Unit converter"], "last_modified": "2026-03", "domain": "productivity", "outputs": {"html_files": [{"path": "index.html", "file_url": "file:///c:/Users/nfval/Projects/lumi-dashboard/index.html"}, {"path": "observatory/index.html", "file_url": "file:///c:/Users/nfval/Projects/lumi-dashboard/observatory/index.html"}, {"path": "tools/fasting-timer.html", "file_url": "file:///c:/Users/nfval/Projects/lumi-dashboard/tools/fasting-timer.html"}, {"path": "tools/index.html", "file_url": "file:///c:/Users/nfval/Projects/lumi-dashboard/tools/index.html"}, {"path": "tools/sinus-trigger-log.html", "file_url": "file:///c:/Users/nfval/Projects/lumi-dashboard/tools/sinus-trigger-log.html"}, {"path": "tools/sleep-debt-tracker.html", "file_url": "file:///c:/Users/nfval/Projects/lumi-dashboard/tools/sleep-debt-tracker.html"}, {"path": "tools/unit-converter.html", "file_url": "file:///c:/Users/nfval/Projects/lumi-dashboard/tools/unit-converter.html"}, {"path": "tools/zone2-hr-calculator.html", "file_url": "file:///c:/Users/nfval/Projects/lumi-dashboard/tools/zone2-hr-calculator.html"}], "report_files": [], "output_dirs": [], "launch": [{"type": "web", "label": "Live Site", "url": "https://lumi.nunovalerio.com", "file": "CNAME"}]}}, {"name": "lumi-mcp-server", "purpose": "MCP server providing Lumi's memory, backlog, ideas, sessions, and metrics tools to Claude Code.", "status": "active", "tech_stack": ["python", "mcp"], "has_ui": false, "ui_type": "none", "has_tests": false, "test_count": 0, "has_run_script": false, "sub_projects": [], "key_outputs": ["MCP tool server", "Embeddings engine"], "last_modified": "2026-02", "domain": "infrastructure", "outputs": {"html_files": [], "report_files": [], "output_dirs": [], "launch": []}}, {"name": "meeting-roi-calculator", "purpose": "Calculates the true cost of recurring meetings using anonymous salary bands and flags expensive zero-outcome meetings.", "status": "mvp-done", "tech_stack": ["python", "sqlite"], "has_ui": false, "ui_type": "none", "has_tests": true, "test_count": 4, "has_run_script": true, "sub_projects": [], "key_outputs": ["Meeting cost calculator", "ROI scoring engine", "Formatted text reports"], "last_modified": "2026-02", "domain": "work", "outputs": {"html_files": [], "report_files": [], "output_dirs": [], "launch": [{"type": "script", "label": "Run Script", "command": "cd \"c:\\Users\\nfval\\Projects\\meeting-roi-calculator\" && powershell -File run.ps1", "file": "run.ps1"}]}}, {"name": "meeting-to-actions", "purpose": "Extracts action items and decisions from meeting transcripts with Notion push and reminder system.", "status": "mvp-done", "tech_stack": ["python", "notion-api"], "has_ui": false, "ui_type": "none", "has_tests": true, "test_count": 7, "has_run_script": false, "sub_projects": [], "key_outputs": ["Transcript parser", "Action extractor", "Notion push", "Reminder system"], "last_modified": "2026-02", "domain": "work", "outputs": {"html_files": [], "report_files": [], "output_dirs": [], "launch": [{"type": "streamlit", "label": "Streamlit App", "command": "cd \"c:\\Users\\nfval\\Projects\\meeting-to-actions\" && streamlit run app.py", "file": "app.py"}, {"type": "script", "label": "Run Script", "command": "cd \"c:\\Users\\nfval\\Projects\\meeting-to-actions\" && powershell -File run.ps1", "file": "run.ps1"}]}}, {"name": "modular-discipline", "purpose": "5-module personal discipline system with friction audit, minimum viable day, and a Life OS HTML page.", "status": "mvp-done", "tech_stack": ["html", "css", "javascript", "python", "markdown"], "has_ui": true, "ui_type": "html", "has_tests": false, "test_count": 0, "has_run_script": false, "sub_projects": [], "key_outputs": ["Life OS HTML page (6 tabs)", "5 discipline modules"], "last_modified": "2026-02", "domain": "productivity", "outputs": {"html_files": [{"path": "index.html", "file_url": "file:///c:/Users/nfval/Projects/modular-discipline/index.html"}, {"path": "life-os.html", "file_url": "file:///c:/Users/nfval/Projects/modular-discipline/life-os.html"}], "report_files": [], "output_dirs": [], "launch": []}}, {"name": "multiverse-forge-studio", "purpose": "Automated visual design pipeline for Multiverse Forge: generates print-ready cards, tokens, covers from JSON + AI images.", "status": "wip", "tech_stack": ["python", "pillow", "replicate-api"], "has_ui": false, "ui_type": "none", "has_tests": true, "test_count": 5, "has_run_script": true, "sub_projects": [], "key_outputs": ["Card compositor", "Print exporter (300 DPI)", "Token generator", "Brand style bible"], "last_modified": "2026-02", "domain": "creative-writing", "outputs": {"html_files": [], "report_files": [], "output_dirs": [], "launch": [{"type": "script", "label": "Run Script", "command": "cd \"c:\\Users\\nfval\\Projects\\multiverse-forge-studio\" && powershell -File run.ps1", "file": "run.ps1"}]}}, {"name": "multiverse-press", "purpose": "Publishing imprint operationalization: legal setup, KDP metadata, brand assets, launch kit for 5 books.", "status": "wip", "tech_stack": ["python", "yaml", "markdown"], "has_ui": false, "ui_type": "none", "has_tests": false, "test_count": 0, "has_run_script": false, "sub_projects": ["launch-kit", "logo"], "key_outputs": ["KDP metadata generator", "5 book YAML definitions", "Brand guidelines", "SVG logo suite"], "last_modified": "2026-02", "domain": "creative-writing", "outputs": {"html_files": [{"path": "logo/brand-guidelines.html", "file_url": "file:///c:/Users/nfval/Projects/multiverse-press/logo/brand-guidelines.html"}], "report_files": [], "output_dirs": [], "launch": []}}, {"name": "multiverseforge-site", "purpose": "Public-facing Astro website for the Multiverse Forge brand with books, games, newsletter, and early access.", "status": "wip", "tech_stack": ["astro", "typescript", "tailwind"], "has_ui": true, "ui_type": "website", "has_tests": false, "test_count": 0, "has_run_script": false, "sub_projects": [], "key_outputs": ["Multi-page Astro website", "Books page", "Games page", "Newsletter page"], "last_modified": "2026-02", "domain": "personal-brand", "outputs": {"html_files": [], "report_files": [], "output_dirs": [], "launch": []}}, {"name": "music-taste-genome", "purpose": "Maps Spotify listening patterns to build a sonic DNA profile with optional genome cross-reference.", "status": "mvp-done", "tech_stack": ["python", "streamlit", "spotify-api"], "has_ui": true, "ui_type": "streamlit", "has_tests": true, "test_count": 4, "has_run_script": true, "sub_projects": [], "key_outputs": ["Sonic DNA profiler", "Temporal listening analyzer", "Streamlit dashboard"], "last_modified": "2026-02", "domain": "other", "outputs": {"html_files": [], "report_files": [], "output_dirs": [], "launch": [{"type": "streamlit", "label": "Streamlit App", "command": "cd \"c:\\Users\\nfval\\Projects\\music-taste-genome\" && streamlit run app.py", "file": "app.py"}, {"type": "script", "label": "Run Script", "command": "cd \"c:\\Users\\nfval\\Projects\\music-taste-genome\" && powershell -File run.ps1", "file": "run.ps1"}]}}, {"name": "natural-speaking-lab", "purpose": "8-week on-camera speaking training program for LoTM YouTube channel with transcript analyzer.", "status": "mvp-done", "tech_stack": ["python", "markdown"], "has_ui": false, "ui_type": "none", "has_tests": false, "test_count": 0, "has_run_script": false, "sub_projects": [], "key_outputs": ["8-week curriculum", "Transcript analyzer", "Scorecard template"], "last_modified": "2026-02", "domain": "content-creation", "outputs": {"html_files": [], "report_files": [{"path": "templates/coaching-protocol.md", "file_url": "file:///c:/Users/nfval/Projects/natural-speaking-lab/templates/coaching-protocol.md"}], "output_dirs": [], "launch": []}}, {"name": "nightly-briefing", "purpose": "Nightly system that collects signals, runs a 3-phase AI review council, and produces prioritized recommendations.", "status": "active", "tech_stack": ["python", "claude-cli", "json"], "has_ui": false, "ui_type": "none", "has_tests": true, "test_count": 6, "has_run_script": true, "sub_projects": ["collectors", "council"], "key_outputs": ["14 domain signal collectors", "AI council pipeline (6 personas)", "Prioritized markdown report"], "last_modified": "2026-02", "domain": "productivity", "outputs": {"html_files": [], "report_files": [{"path": "reports/briefing_2026-02-15.md", "file_url": "file:///c:/Users/nfval/Projects/nightly-briefing/reports/briefing_2026-02-15.md"}, {"path": "reports/briefing_2026-02-16.md", "file_url": "file:///c:/Users/nfval/Projects/nightly-briefing/reports/briefing_2026-02-16.md"}], "output_dirs": [], "launch": [{"type": "script", "label": "Run Script", "command": "cd \"c:\\Users\\nfval\\Projects\\nightly-briefing\" && powershell -File run.ps1", "file": "run.ps1"}]}}, {"name": "notion_finance_os", "purpose": "Comprehensive Notion-backed personal finance system with GoodBudget sync, bank reconciliation, investments, and analytics.", "status": "active", "tech_stack": ["python", "notion-api", "numpy", "playwright", "sqlite"], "has_ui": false, "ui_type": "none", "has_tests": false, "test_count": 0, "has_run_script": true, "sub_projects": ["invest", "reconcile", "migration", "analytics", "monthly"], "key_outputs": ["GoodBudget sync", "Bank CSV parsers", "BTC decision engine", "Net worth tracker"], "last_modified": "2026-03", "domain": "finance", "outputs": {"html_files": [], "report_files": [], "output_dirs": [{"path": "data/output", "files": ["btc_evaluation.json", "gb_reconciliation_2026-02-10.json", "investment_scenarios_results.json", "reconciliation_20260211_1053.json", "reconciliation_20260211_1054.json", "reconciliation_20260211_1105.json", "reconciliation_20260211_1106.json", "reconciliation_20260211_1107.json", "reconciliation_20260211_1109.json", "reconciliation_20260211_1131.json"]}], "launch": [{"type": "fastapi", "label": "FastAPI App", "command": "cd \"c:\\Users\\nfval\\Projects\\notion_finance_os\" && uvicorn main:app --reload", "file": "main.py"}, {"type": "script", "label": "Run Script", "command": "cd \"c:\\Users\\nfval\\Projects\\notion_finance_os\" && powershell -File run.ps1", "file": "run.ps1"}]}}, {"name": "nuno-dashboard-template", "purpose": "Reusable Next.js dashboard template with shadcn/ui, Tailwind v4, Recharts, auth, and dark mode.", "status": "template", "tech_stack": ["nextjs", "react", "typescript", "tailwind", "shadcn-ui", "recharts"], "has_ui": true, "ui_type": "dashboard", "has_tests": false, "test_count": 0, "has_run_script": false, "sub_projects": [], "key_outputs": ["Reusable dashboard template", "Sidebar layout", "Chart components"], "last_modified": "2026-02", "domain": "infrastructure", "outputs": {"html_files": [], "report_files": [], "output_dirs": [], "launch": [{"type": "nextjs", "label": "Next.js App", "command": "cd \"c:\\Users\\nfval\\Projects\\nuno-dashboard-template\" && npm run dev", "file": "package.json"}]}}, {"name": "nunovalerio-site", "purpose": "Personal brand website for nunovalerio.com built with Astro 5, Tailwind, and MDX.", "status": "wip", "tech_stack": ["astro", "tailwind", "mdx", "typescript", "vercel"], "has_ui": true, "ui_type": "website", "has_tests": false, "test_count": 0, "has_run_script": false, "sub_projects": [], "key_outputs": ["Personal brand website with assessment, speaking, newsletter pages"], "last_modified": "2026-03", "domain": "personal-brand", "outputs": {"html_files": [{"path": "resources/old-site.html", "file_url": "file:///c:/Users/nfval/Projects/nunovalerio-site/resources/old-site.html"}], "report_files": [], "output_dirs": [], "launch": []}}, {"name": "old-nunovalerio-site", "purpose": "Previous version of nunovalerio.com, a static HTML personal site.", "status": "abandoned", "tech_stack": ["html", "css", "javascript", "vercel"], "has_ui": true, "ui_type": "website", "has_tests": false, "test_count": 0, "has_run_script": false, "sub_projects": ["book"], "key_outputs": ["Static personal website", "Book landing page"], "last_modified": "2025-12", "domain": "personal-brand", "outputs": {"html_files": [{"path": "index.html", "file_url": "file:///c:/Users/nfval/Projects/old-nunovalerio-site/index.html"}, {"path": "book/index.html", "file_url": "file:///c:/Users/nfval/Projects/old-nunovalerio-site/book/index.html"}], "report_files": [], "output_dirs": [], "launch": []}}, {"name": "org-effectiveness", "purpose": "Streamlit app for team health diagnostics measuring innovation theater and organizational dysfunction.", "status": "mvp-done", "tech_stack": ["python", "streamlit", "sqlite"], "has_ui": true, "ui_type": "streamlit", "has_tests": false, "test_count": 0, "has_run_script": true, "sub_projects": [], "key_outputs": ["Team health diagnostic app", "Innovation theater detection"], "last_modified": "2026-02", "domain": "work", "outputs": {"html_files": [], "report_files": [], "output_dirs": [], "launch": [{"type": "streamlit", "label": "Streamlit App", "command": "cd \"c:\\Users\\nfval\\Projects\\org-effectiveness\" && streamlit run app.py", "file": "app.py"}, {"type": "script", "label": "Run Script", "command": "cd \"c:\\Users\\nfval\\Projects\\org-effectiveness\" && powershell -File run.ps1", "file": "run.ps1"}]}}, {"name": "pdf-data-extractor", "purpose": "Template-based PDF data extraction tool with validation, audit trails, and report generation.", "status": "mvp-done", "tech_stack": ["python", "pytest"], "has_ui": false, "ui_type": "none", "has_tests": true, "test_count": 6, "has_run_script": true, "sub_projects": [], "key_outputs": ["PDF extraction engine", "Invoice/certificate templates", "Audit trail"], "last_modified": "2026-02", "domain": "work", "outputs": {"html_files": [], "report_files": [], "output_dirs": [], "launch": [{"type": "script", "label": "Run Script", "command": "cd \"c:\\Users\\nfval\\Projects\\pdf-data-extractor\" && powershell -File run.ps1", "file": "run.ps1"}]}}, {"name": "personal-branding-page", "purpose": "Single-page personal branding site deployed at nunovalerio.com via GitHub Pages.", "status": "mvp-done", "tech_stack": ["html", "css", "javascript"], "has_ui": true, "ui_type": "website", "has_tests": false, "test_count": 0, "has_run_script": false, "sub_projects": [], "key_outputs": ["Live personal website at nunovalerio.com"], "last_modified": "2026-02", "domain": "personal-brand", "outputs": {"html_files": [{"path": "assessment.html", "file_url": "file:///c:/Users/nfval/Projects/personal-branding-page/assessment.html"}, {"path": "book.html", "file_url": "file:///c:/Users/nfval/Projects/personal-branding-page/book.html"}, {"path": "index.html", "file_url": "file:///c:/Users/nfval/Projects/personal-branding-page/index.html"}, {"path": "ios-kit.html", "file_url": "file:///c:/Users/nfval/Projects/personal-branding-page/ios-kit.html"}, {"path": "ios-toolkit.html", "file_url": "file:///c:/Users/nfval/Projects/personal-branding-page/ios-toolkit.html"}], "report_files": [], "output_dirs": [], "launch": [{"type": "web", "label": "Live Site", "url": "https://nunovalerio.com", "file": "CNAME"}]}}, {"name": "personal-changelog", "purpose": "Software-style weekly changelog for life, auto-generated from Lumi data sources.", "status": "mvp-done", "tech_stack": ["python", "pytest"], "has_ui": false, "ui_type": "none", "has_tests": true, "test_count": 3, "has_run_script": true, "sub_projects": [], "key_outputs": ["Weekly markdown changelogs", "Multi-source data collectors"], "last_modified": "2026-02", "domain": "productivity", "outputs": {"html_files": [], "report_files": [{"path": "CHANGELOG.md", "file_url": "file:///c:/Users/nfval/Projects/personal-changelog/CHANGELOG.md"}], "output_dirs": [], "launch": [{"type": "script", "label": "Run Script", "command": "cd \"c:\\Users\\nfval\\Projects\\personal-changelog\" && powershell -File run.ps1", "file": "run.ps1"}]}}, {"name": "pharma-compliance-toolkit", "purpose": "Unified toolkit for pharma/GxP compliance with 6 modules: Doc Q&A, Checklist, GDPR Scanner, Audit Trail, KPI, Meeting Co-pilot.", "status": "wip", "tech_stack": ["python", "pytest"], "has_ui": false, "ui_type": "none", "has_tests": true, "test_count": 7, "has_run_script": true, "sub_projects": [], "key_outputs": ["SOP Q&A engine", "SOP-to-checklist converter", "GDPR scanner", "Audit trail generator"], "last_modified": "2026-02", "domain": "work", "outputs": {"html_files": [], "report_files": [], "output_dirs": [], "launch": [{"type": "script", "label": "Run Script", "command": "cd \"c:\\Users\\nfval\\Projects\\pharma-compliance-toolkit\" && powershell -File run.ps1", "file": "run.ps1"}]}}, {"name": "podcast-pitch-kit", "purpose": "Generates personalized podcast guest pitch emails by scraping RSS feeds and identifying topic gaps via Claude API.", "status": "mvp-done", "tech_stack": ["python", "anthropic", "pytest"], "has_ui": false, "ui_type": "none", "has_tests": true, "test_count": 2, "has_run_script": true, "sub_projects": [], "key_outputs": ["RSS feed parser", "LLM pitch email generator"], "last_modified": "2026-02", "domain": "content-creation", "outputs": {"html_files": [], "report_files": [], "output_dirs": [], "launch": [{"type": "script", "label": "Run Script", "command": "cd \"c:\\Users\\nfval\\Projects\\podcast-pitch-kit\" && powershell -File run.ps1", "file": "run.ps1"}]}}, {"name": "portugal-return-planner", "purpose": "Decision support tool for modeling family return from Germany to Portugal comparing tax, cost of living, schools.", "status": "mvp-done", "tech_stack": ["python", "pytest"], "has_ui": true, "ui_type": "html", "has_tests": true, "test_count": 5, "has_run_script": true, "sub_projects": [], "key_outputs": ["Tax comparison (DE vs PT)", "Cost of living comparator", "School tracker", "HTML dashboard"], "last_modified": "2026-02", "domain": "family", "outputs": {"html_files": [{"path": "templates/dashboard.html", "file_url": "file:///c:/Users/nfval/Projects/portugal-return-planner/templates/dashboard.html"}], "report_files": [{"path": "reports/decision_report.md", "file_url": "file:///c:/Users/nfval/Projects/portugal-return-planner/reports/decision_report.md"}], "output_dirs": [], "launch": [{"type": "script", "label": "Run Script", "command": "cd \"c:\\Users\\nfval\\Projects\\portugal-return-planner\" && powershell -File run.ps1", "file": "run.ps1"}]}}, {"name": "portugal-villa-tracker", "purpose": "Notion-backed project tracker for Portugal villa/property purchase with regions, legal steps, and scenarios.", "status": "mvp-done", "tech_stack": ["python", "notion-api"], "has_ui": false, "ui_type": "none", "has_tests": false, "test_count": 0, "has_run_script": true, "sub_projects": ["setup", "reports", "research", "decisions"], "key_outputs": ["Notion database seeder", "Project status reports", "Region scoring"], "last_modified": "2026-01", "domain": "family", "outputs": {"html_files": [], "report_files": [], "output_dirs": [], "launch": [{"type": "script", "label": "Run Script", "command": "cd \"c:\\Users\\nfval\\Projects\\portugal-villa-tracker\" && powershell -File run.ps1", "file": "run.ps1"}]}}, {"name": "professional-portfolio", "purpose": "Track professional accomplishments, certifications, publications for annual reviews and CV maintenance.", "status": "mvp-done", "tech_stack": ["python", "pytest"], "has_ui": false, "ui_type": "none", "has_tests": true, "test_count": 4, "has_run_script": true, "sub_projects": [], "key_outputs": ["Annual review reports", "LinkedIn summaries", "CV sections"], "last_modified": "2026-02", "domain": "work", "outputs": {"html_files": [], "report_files": [{"path": "PROJECT_SUMMARY.md", "file_url": "file:///c:/Users/nfval/Projects/professional-portfolio/PROJECT_SUMMARY.md"}], "output_dirs": [{"path": "data/output", "files": ["portfolio_export.json"]}], "launch": [{"type": "script", "label": "Run Script", "command": "cd \"c:\\Users\\nfval\\Projects\\professional-portfolio\" && powershell -File run.ps1", "file": "run.ps1"}]}}, {"name": "prose-style-analyzer", "purpose": "Analyzes prose manuscripts for readability, rhythm, dialogue quality, phrase patterns, and pacing.", "status": "mvp-done", "tech_stack": ["python", "pytest"], "has_ui": false, "ui_type": "none", "has_tests": true, "test_count": 5, "has_run_script": true, "sub_projects": [], "key_outputs": ["Readability analyzer", "Rhythm analyzer", "Dialogue analyzer", "Pacing analyzer"], "last_modified": "2026-02", "domain": "creative-writing", "outputs": {"html_files": [], "report_files": [], "output_dirs": [], "launch": [{"type": "script", "label": "Run Script", "command": "cd \"c:\\Users\\nfval\\Projects\\prose-style-analyzer\" && powershell -File run.ps1", "file": "run.ps1"}]}}, {"name": "recipes-manager", "purpose": "Syncs recipe data from Notion and merges with local ingredient lists for the Lumi dashboard.", "status": "mvp-done", "tech_stack": ["python", "notion-api"], "has_ui": false, "ui_type": "none", "has_tests": false, "test_count": 0, "has_run_script": false, "sub_projects": [], "key_outputs": ["Notion recipe sync", "Dashboard recipes JSON"], "last_modified": "2026-02", "domain": "family", "outputs": {"html_files": [], "report_files": [], "output_dirs": [], "launch": []}}, {"name": "reg-plain-language", "purpose": "Streamlit app that converts regulatory text into plain language with obligation classification.", "status": "mvp-done", "tech_stack": ["python", "streamlit"], "has_ui": true, "ui_type": "streamlit", "has_tests": false, "test_count": 0, "has_run_script": true, "sub_projects": [], "key_outputs": ["Regulatory text converter", "Obligation tagging"], "last_modified": "2026-02", "domain": "work", "outputs": {"html_files": [], "report_files": [], "output_dirs": [], "launch": [{"type": "streamlit", "label": "Streamlit App", "command": "cd \"c:\\Users\\nfval\\Projects\\reg-plain-language\" && streamlit run app.py", "file": "app.py"}, {"type": "script", "label": "Run Script", "command": "cd \"c:\\Users\\nfval\\Projects\\reg-plain-language\" && powershell -File run.ps1", "file": "run.ps1"}]}}, {"name": "regulatory-radar", "purpose": "Monitors EMA, FDA, ICH, PIC/S and 10+ regulatory agencies for guideline changes relevant to pharma quality.", "status": "active", "tech_stack": ["python"], "has_ui": false, "ui_type": "none", "has_tests": false, "test_count": 0, "has_run_script": true, "sub_projects": [], "key_outputs": ["Weekly regulatory digest", "Multi-source fetchers", "Relevance scorer"], "last_modified": "2026-02", "domain": "work", "outputs": {"html_files": [], "report_files": [{"path": "reports/weekly_digest_2026-02-14.md", "file_url": "file:///c:/Users/nfval/Projects/regulatory-radar/reports/weekly_digest_2026-02-14.md"}, {"path": "reports/weekly_digest_2026-02-15.md", "file_url": "file:///c:/Users/nfval/Projects/regulatory-radar/reports/weekly_digest_2026-02-15.md"}], "output_dirs": [], "launch": [{"type": "script", "label": "Run Script", "command": "cd \"c:\\Users\\nfval\\Projects\\regulatory-radar\" && powershell -File run.ps1", "file": "run.ps1"}]}}, {"name": "relationship-crm", "purpose": "Personal relationship intelligence tool with health scoring, engagement tracking, and re-engagement recommendations.", "status": "mvp-done", "tech_stack": ["nextjs", "react", "typescript", "tailwind", "supabase", "vercel"], "has_ui": true, "ui_type": "website", "has_tests": false, "test_count": 0, "has_run_script": false, "sub_projects": [], "key_outputs": ["Contact management dashboard", "Health scoring engine", "Circle management"], "last_modified": "2026-03", "domain": "productivity", "outputs": {"html_files": [], "report_files": [], "output_dirs": [], "launch": [{"type": "nextjs", "label": "Next.js App", "command": "cd \"c:\\Users\\nfval\\Projects\\relationship-crm\" && npm run dev", "file": "package.json"}]}}, {"name": "renewal-tracker", "purpose": "Tracks recurring renewals (insurance, subscriptions, vehicle, housing) with cost calculations and timeline viz.", "status": "mvp-done", "tech_stack": ["python"], "has_ui": true, "ui_type": "html", "has_tests": false, "test_count": 0, "has_run_script": true, "sub_projects": [], "key_outputs": ["Monthly heatmap HTML report", "Timeline HTML report"], "last_modified": "2026-02", "domain": "finance", "outputs": {"html_files": [{"path": "reports/monthly_heatmap.html", "file_url": "file:///c:/Users/nfval/Projects/renewal-tracker/reports/monthly_heatmap.html"}, {"path": "reports/timeline.html", "file_url": "file:///c:/Users/nfval/Projects/renewal-tracker/reports/timeline.html"}], "report_files": [], "output_dirs": [], "launch": [{"type": "script", "label": "Run Script", "command": "cd \"c:\\Users\\nfval\\Projects\\renewal-tracker\" && powershell -File run.ps1", "file": "run.ps1"}]}}, {"name": "research-monitor", "purpose": "Monitors academic research via arXiv and RSS feeds with deduplication, categorization, and weekly reports.", "status": "mvp-done", "tech_stack": ["python", "anthropic", "pytest"], "has_ui": false, "ui_type": "none", "has_tests": true, "test_count": 5, "has_run_script": true, "sub_projects": [], "key_outputs": ["arXiv collector", "LLM categorizer", "Weekly research report"], "last_modified": "2026-02", "domain": "learning", "outputs": {"html_files": [], "report_files": [], "output_dirs": [], "launch": [{"type": "script", "label": "Run Script", "command": "cd \"c:\\Users\\nfval\\Projects\\research-monitor\" && powershell -File run.ps1", "file": "run.ps1"}]}}, {"name": "salary-comp-engine", "purpose": "Data-driven compensation intelligence for Head-level pharma R&D quality roles with negotiation playbook.", "status": "mvp-done", "tech_stack": ["python"], "has_ui": false, "ui_type": "none", "has_tests": false, "test_count": 0, "has_run_script": false, "sub_projects": [], "key_outputs": ["Salary analysis engine", "Negotiation playbook"], "last_modified": "2026-02", "domain": "finance", "outputs": {"html_files": [], "report_files": [{"path": "reports/negotiation_playbook.md", "file_url": "file:///c:/Users/nfval/Projects/salary-comp-engine/reports/negotiation_playbook.md"}], "output_dirs": [], "launch": []}}, {"name": "session-economics", "purpose": "Tracks and analyzes Claude Code session costs, model routing efficiency, and token economics.", "status": "mvp-done", "tech_stack": ["python", "pytest"], "has_ui": false, "ui_type": "none", "has_tests": true, "test_count": 4, "has_run_script": true, "sub_projects": [], "key_outputs": ["Session cost analyzer", "Model routing tracker", "Economics report"], "last_modified": "2026-02", "domain": "infrastructure", "outputs": {"html_files": [], "report_files": [], "output_dirs": [], "launch": [{"type": "script", "label": "Run Script", "command": "cd \"c:\\Users\\nfval\\Projects\\session-economics\" && powershell -File run.ps1", "file": "run.ps1"}]}}, {"name": "sleep-energy-tracker", "purpose": "Sleep tracking and analysis importing from Apple Health and Ultrahuman with revenge bedtime detection.", "status": "mvp-done", "tech_stack": ["python", "pytest"], "has_ui": false, "ui_type": "none", "has_tests": true, "test_count": 4, "has_run_script": true, "sub_projects": [], "key_outputs": ["Apple Health importer", "Revenge bedtime detector", "Sleep pattern analysis"], "last_modified": "2026-02", "domain": "health", "outputs": {"html_files": [], "report_files": [], "output_dirs": [], "launch": [{"type": "script", "label": "Run Script", "command": "cd \"c:\\Users\\nfval\\Projects\\sleep-energy-tracker\" && powershell -File run.ps1", "file": "run.ps1"}]}}, {"name": "smart-folder-organizer", "purpose": "Scans unorganized folders, classifies files, detects duplicates, and proposes reorganization with undo capability.", "status": "mvp-done", "tech_stack": ["python", "sqlite", "pytest"], "has_ui": false, "ui_type": "none", "has_tests": true, "test_count": 6, "has_run_script": true, "sub_projects": [], "key_outputs": ["File classifier", "Duplicate detector", "Move plan generator", "Undo system"], "last_modified": "2026-02", "domain": "productivity", "outputs": {"html_files": [], "report_files": [{"path": "reports/detail_report.md", "file_url": "file:///c:/Users/nfval/Projects/smart-folder-organizer/reports/detail_report.md"}, {"path": "reports/plan_report.md", "file_url": "file:///c:/Users/nfval/Projects/smart-folder-organizer/reports/plan_report.md"}, {"path": "reports/summary_report.md", "file_url": "file:///c:/Users/nfval/Projects/smart-folder-organizer/reports/summary_report.md"}], "output_dirs": [], "launch": [{"type": "script", "label": "Run Script", "command": "cd \"c:\\Users\\nfval\\Projects\\smart-folder-organizer\" && powershell -File run.ps1", "file": "run.ps1"}]}}, {"name": "social-metrics", "purpose": "Tracks follower counts across GitHub, YouTube, LinkedIn, X/Twitter with Typefully integration.", "status": "mvp-done", "tech_stack": ["python"], "has_ui": false, "ui_type": "none", "has_tests": false, "test_count": 0, "has_run_script": false, "sub_projects": [], "key_outputs": ["Multi-platform follower tracking", "Typefully integration"], "last_modified": "2026-02", "domain": "content-creation", "outputs": {"html_files": [], "report_files": [], "output_dirs": [], "launch": []}}, {"name": "social-research", "purpose": "Social media research tool answering topic questions via Twitter/X with tiered API retrieval and briefing synthesis.", "status": "mvp-done", "tech_stack": ["python", "pytest"], "has_ui": false, "ui_type": "none", "has_tests": true, "test_count": 6, "has_run_script": true, "sub_projects": [], "key_outputs": ["Query decomposer", "Tiered Twitter API retriever", "Markdown briefing synthesizer"], "last_modified": "2026-02", "domain": "ai-tools", "outputs": {"html_files": [], "report_files": [], "output_dirs": [], "launch": [{"type": "script", "label": "Run Script", "command": "cd \"c:\\Users\\nfval\\Projects\\social-research\" && powershell -File run.ps1", "file": "run.ps1"}]}}, {"name": "stakeholder-sentiment-tracker", "purpose": "Tracks stakeholder sentiment over time with trend analysis, risk scoring, and political weather map dashboards.", "status": "mvp-done", "tech_stack": ["python", "sqlite", "pytest"], "has_ui": false, "ui_type": "none", "has_tests": true, "test_count": 5, "has_run_script": true, "sub_projects": [], "key_outputs": ["Stakeholder sentiment database", "Trend analysis engine", "Risk scoring"], "last_modified": "2026-02", "domain": "work", "outputs": {"html_files": [], "report_files": [], "output_dirs": [], "launch": [{"type": "script", "label": "Run Script", "command": "cd \"c:\\Users\\nfval\\Projects\\stakeholder-sentiment-tracker\" && powershell -File run.ps1", "file": "run.ps1"}]}}, {"name": "story-bible-engine", "purpose": "Parses fiction manuscripts to build story bibles with universe data, character indices, and continuity checking.", "status": "wip", "tech_stack": ["python", "pytest"], "has_ui": true, "ui_type": "html", "has_tests": true, "test_count": 2, "has_run_script": true, "sub_projects": [], "key_outputs": ["Chapter scanner", "Bible parser", "Continuity checker", "Static HTML subsite"], "last_modified": "2026-02", "domain": "creative-writing", "outputs": {"html_files": [{"path": "output/subsite/index.html", "file_url": "file:///c:/Users/nfval/Projects/story-bible-engine/output/subsite/index.html"}], "report_files": [], "output_dirs": [], "launch": [{"type": "script", "label": "Run Script", "command": "cd \"c:\\Users\\nfval\\Projects\\story-bible-engine\" && powershell -File run.ps1", "file": "run.ps1"}]}}, {"name": "toolbox", "purpose": "Empty project folder.", "status": "empty", "tech_stack": [], "has_ui": false, "ui_type": "none", "has_tests": false, "test_count": 0, "has_run_script": false, "sub_projects": [], "key_outputs": [], "last_modified": "N/A", "domain": "other", "outputs": {"html_files": [], "report_files": [], "output_dirs": [], "launch": []}}, {"name": "voice-clone-narrator", "purpose": "Pipeline that clones Nuno's voice and generates audiobook narration using F5-TTS/GPT-SoVITS.", "status": "wip", "tech_stack": ["python", "f5-tts", "pydub", "ffmpeg", "yt-dlp"], "has_ui": false, "ui_type": "none", "has_tests": false, "test_count": 0, "has_run_script": false, "sub_projects": [], "key_outputs": ["Voice training pipeline", "Chapter audio generator", "Audiobook stitcher"], "last_modified": "2026-02", "domain": "creative-writing", "outputs": {"html_files": [{"path": "templates/index.html", "file_url": "file:///c:/Users/nfval/Projects/voice-clone-narrator/templates/index.html"}], "report_files": [], "output_dirs": [], "launch": [{"type": "fastapi", "label": "FastAPI App", "command": "cd \"c:\\Users\\nfval\\Projects\\voice-clone-narrator\" && uvicorn main:app --reload", "file": "main.py"}, {"type": "script", "label": "Run Script", "command": "cd \"c:\\Users\\nfval\\Projects\\voice-clone-narrator\" && powershell -File run.ps1", "file": "run.ps1"}]}}, {"name": "work-dashboard", "purpose": "Next.js dashboard aggregating work intelligence: portfolio, innovation, stakeholders, salary, regulatory, compliance, meetings.", "status": "active", "tech_stack": ["nextjs", "react", "typescript", "tailwind", "recharts", "sentry", "posthog"], "has_ui": true, "ui_type": "dashboard", "has_tests": false, "test_count": 0, "has_run_script": false, "sub_projects": [], "key_outputs": ["Multi-page work intelligence dashboard"], "last_modified": "2026-03", "domain": "work", "outputs": {"html_files": [], "report_files": [], "output_dirs": [], "launch": [{"type": "nextjs", "label": "Next.js App", "command": "cd \"c:\\Users\\nfval\\Projects\\work-dashboard\" && npm run dev", "file": "package.json"}, {"type": "script", "label": "Run Script", "command": "cd \"c:\\Users\\nfval\\Projects\\work-dashboard\" && powershell -File run.ps1", "file": "run.ps1"}]}}, {"name": "writers-toolkit", "purpose": "Analysis toolkit for fiction writers with manuscript parsing, voice fingerprinting, plot detection, and cover brief generation.", "status": "mvp-done", "tech_stack": ["python", "nodejs", "pytest"], "has_ui": false, "ui_type": "none", "has_tests": true, "test_count": 4, "has_run_script": true, "sub_projects": [], "key_outputs": ["Manuscript parser", "Voice fingerprinter", "Plot detective", "NPM package"], "last_modified": "2026-02", "domain": "creative-writing", "outputs": {"html_files": [], "report_files": [], "output_dirs": [], "launch": [{"type": "script", "label": "Run Script", "command": "cd \"c:\\Users\\nfval\\Projects\\writers-toolkit\" && powershell -File run.ps1", "file": "run.ps1"}]}}, {"name": "writers-toolkit-web", "purpose": "Next.js landing page and waitlist for the writers-toolkit NPM package with analytics and legal pages.", "status": "mvp-done", "tech_stack": ["nextjs", "react", "typescript", "tailwind"], "has_ui": true, "ui_type": "website", "has_tests": false, "test_count": 0, "has_run_script": false, "sub_projects": [], "key_outputs": ["Landing page", "Waitlist API", "Privacy/terms pages"], "last_modified": "2026-02", "domain": "creative-writing", "outputs": {"html_files": [], "report_files": [], "output_dirs": [], "launch": [{"type": "nextjs", "label": "Next.js App", "command": "cd \"c:\\Users\\nfval\\Projects\\writers-toolkit-web\" && npm run dev", "file": "package.json"}]}}, {"name": "youtube-thumbnail-workshop", "purpose": "Strategic content tool for LoTM YouTube channel generating titles, CTR-scored thumbnails, and workshop sessions.", "status": "mvp-done", "tech_stack": ["python", "pytest"], "has_ui": false, "ui_type": "none", "has_tests": true, "test_count": 4, "has_run_script": true, "sub_projects": [], "key_outputs": ["Title generator (10 variations)", "CTR scorer", "Thumbnail concept generator"], "last_modified": "2026-02", "domain": "content-creation", "outputs": {"html_files": [], "report_files": [], "output_dirs": [], "launch": [{"type": "script", "label": "Run Script", "command": "cd \"c:\\Users\\nfval\\Projects\\youtube-thumbnail-workshop\" && powershell -File run.ps1", "file": "run.ps1"}]}}, {"name": "council-of-selves-book", "purpose": "Council of Selves book project - exploring inner archetypes.", "status": "planned", "tech_stack": [], "has_ui": false, "ui_type": "none", "has_tests": false, "test_count": 0, "has_run_script": false, "sub_projects": [], "key_outputs": [], "last_modified": "N/A", "domain": "creative-writing", "priority": "P1", "outputs": {"html_files": [], "report_files": [], "output_dirs": [], "launch": []}}, {"name": "regulatory-plain-language-converter", "purpose": "Convert regulatory text into plain language.", "status": "planned", "tech_stack": [], "has_ui": false, "ui_type": "none", "has_tests": false, "test_count": 0, "has_run_script": false, "sub_projects": [], "key_outputs": [], "last_modified": "N/A", "domain": "work", "priority": "P2", "outputs": {"html_files": [], "report_files": [], "output_dirs": [], "launch": []}}, {"name": "innovation-readiness-assessment-tool", "purpose": "Assessment tool for organizational innovation readiness.", "status": "planned", "tech_stack": [], "has_ui": false, "ui_type": "none", "has_tests": false, "test_count": 0, "has_run_script": false, "sub_projects": [], "key_outputs": [], "last_modified": "N/A", "domain": "work", "priority": "P2", "outputs": {"html_files": [], "report_files": [], "output_dirs": [], "launch": []}}, {"name": "speaking-engagement-pipeline", "purpose": "Pipeline for managing speaking engagement opportunities.", "status": "planned", "tech_stack": [], "has_ui": false, "ui_type": "none", "has_tests": false, "test_count": 0, "has_run_script": false, "sub_projects": [], "key_outputs": [], "last_modified": "N/A", "domain": "brand-content", "priority": "P2", "outputs": {"html_files": [], "report_files": [], "output_dirs": [], "launch": []}}, {"name": "meta-api-integration", "purpose": "Instagram + Facebook API integration for social media management.", "status": "planned", "tech_stack": [], "has_ui": false, "ui_type": "none", "has_tests": false, "test_count": 0, "has_run_script": false, "sub_projects": [], "key_outputs": [], "last_modified": "N/A", "domain": "brand-content", "priority": "P2", "outputs": {"html_files": [], "report_files": [], "output_dirs": [], "launch": []}}, {"name": "product-vertical-decomposition", "purpose": "Decompose product verticals for Multiverse Forge.", "status": "planned", "tech_stack": [], "has_ui": false, "ui_type": "none", "has_tests": false, "test_count": 0, "has_run_script": false, "sub_projects": [], "key_outputs": [], "last_modified": "N/A", "domain": "work", "priority": "P2", "outputs": {"html_files": [], "report_files": [], "output_dirs": [], "launch": []}}, {"name": "typefully-linkedin-integration", "purpose": "Integration with Typefully for LinkedIn content scheduling.", "status": "planned", "tech_stack": [], "has_ui": false, "ui_type": "none", "has_tests": false, "test_count": 0, "has_run_script": false, "sub_projects": [], "key_outputs": [], "last_modified": "N/A", "domain": "brand-content", "priority": "P3", "outputs": {"html_files": [], "report_files": [], "output_dirs": [], "launch": []}}, {"name": "innovation-theater-scanner", "purpose": "Detect innovation theater patterns in organizations.", "status": "planned", "tech_stack": [], "has_ui": false, "ui_type": "none", "has_tests": false, "test_count": 0, "has_run_script": false, "sub_projects": [], "key_outputs": [], "last_modified": "N/A", "domain": "work", "priority": "P3", "outputs": {"html_files": [], "report_files": [], "output_dirs": [], "launch": []}}, {"name": "network-vulnerability-scanner", "purpose": "Scan network for security vulnerabilities.", "status": "planned", "tech_stack": [], "has_ui": false, "ui_type": "none", "has_tests": false, "test_count": 0, "has_run_script": false, "sub_projects": [], "key_outputs": [], "last_modified": "N/A", "domain": "infrastructure", "priority": "P3", "outputs": {"html_files": [], "report_files": [], "output_dirs": [], "launch": []}}, {"name": "patent-landscape-scanner", "purpose": "Scan patent landscapes for competitive intelligence.", "status": "planned", "tech_stack": [], "has_ui": false, "ui_type": "none", "has_tests": false, "test_count": 0, "has_run_script": false, "sub_projects": [], "key_outputs": [], "last_modified": "N/A", "domain": "work", "priority": "P3", "outputs": {"html_files": [], "report_files": [], "output_dirs": [], "launch": []}}, {"name": "tech-radar-builder", "purpose": "Build technology radar visualizations for teams.", "status": "planned", "tech_stack": [], "has_ui": false, "ui_type": "none", "has_tests": false, "test_count": 0, "has_run_script": false, "sub_projects": [], "key_outputs": [], "last_modified": "N/A", "domain": "work", "priority": "P3", "outputs": {"html_files": [], "report_files": [], "output_dirs": [], "launch": []}}, {"name": "flashcard-factory", "purpose": "Generate flashcards from various content sources.", "status": "planned", "tech_stack": [], "has_ui": false, "ui_type": "none", "has_tests": false, "test_count": 0, "has_run_script": false, "sub_projects": [], "key_outputs": [], "last_modified": "N/A", "domain": "personal", "priority": "P3", "outputs": {"html_files": [], "report_files": [], "output_dirs": [], "launch": []}}, {"name": "subscription-watchdog", "purpose": "Monitor and alert on subscription renewals and costs.", "status": "planned", "tech_stack": [], "has_ui": false, "ui_type": "none", "has_tests": false, "test_count": 0, "has_run_script": false, "sub_projects": [], "key_outputs": [], "last_modified": "N/A", "domain": "finance", "priority": "P3", "outputs": {"html_files": [], "report_files": [], "output_dirs": [], "launch": []}}, {"name": "net-worth-tracker", "purpose": "Track net worth across all accounts and assets.", "status": "planned", "tech_stack": [], "has_ui": false, "ui_type": "none", "has_tests": false, "test_count": 0, "has_run_script": false, "sub_projects": [], "key_outputs": [], "last_modified": "N/A", "domain": "finance", "priority": "P3", "outputs": {"html_files": [], "report_files": [], "output_dirs": [], "launch": []}}, {"name": "contrarian-generator", "purpose": "Generate contrarian perspectives on any topic.", "status": "planned", "tech_stack": [], "has_ui": false, "ui_type": "none", "has_tests": false, "test_count": 0, "has_run_script": false, "sub_projects": [], "key_outputs": [], "last_modified": "N/A", "domain": "ai-tools", "priority": "P3", "outputs": {"html_files": [], "report_files": [], "output_dirs": [], "launch": []}}, {"name": "jarvis-prototype-interface", "purpose": "Prototype a Jarvis-like personal AI assistant interface.", "status": "planned", "tech_stack": [], "has_ui": false, "ui_type": "none", "has_tests": false, "test_count": 0, "has_run_script": false, "sub_projects": [], "key_outputs": [], "last_modified": "N/A", "domain": "ai-tools", "priority": "P3", "outputs": {"html_files": [], "report_files": [], "output_dirs": [], "launch": []}}, {"name": "project-autopsy-engine", "purpose": "Post-mortem analysis engine for completed projects.", "status": "planned", "tech_stack": [], "has_ui": false, "ui_type": "none", "has_tests": false, "test_count": 0, "has_run_script": false, "sub_projects": [], "key_outputs": [], "last_modified": "N/A", "domain": "infrastructure", "priority": "P3", "outputs": {"html_files": [], "report_files": [], "output_dirs": [], "launch": []}}];
+
+    /* ── DOM Helper ─────────────────────────── */
+    function el(tag, attrs, children) {
+        var e = document.createElement(tag);
+        if (attrs) {
+            Object.keys(attrs).forEach(function(k) {
+                if (k === 'className') e.className = attrs[k];
+                else if (k === 'textContent') e.textContent = attrs[k];
+                else if (k === 'onclick') e.addEventListener('click', attrs[k]);
+                else if (k === 'onchange') e.addEventListener('change', attrs[k]);
+                else if (k === 'oninput') e.addEventListener('input', attrs[k]);
+                else if (k === 'style') Object.assign(e.style, attrs[k]);
+                else if (k === 'dataset') Object.keys(attrs[k]).forEach(function(dk) { e.dataset[dk] = attrs[k][dk]; });
+                else e.setAttribute(k, attrs[k]);
+            });
+        }
+        if (children) {
+            if (!Array.isArray(children)) children = [children];
+            children.forEach(function(c) {
+                if (c == null) return;
+                if (typeof c === 'string') e.appendChild(document.createTextNode(c));
+                else e.appendChild(c);
+            });
+        }
+        return e;
+    }
+
+    /* ── State ──────────────────────────────── */
+    var currentView = 'summary';
+    var searchTerm = '';
+    var statusFilter = 'all';
+    var domainFilter = 'all';
+    var sortCol = 'name';
+    var sortDir = 'asc';
+
+    var statuses = ['active', 'mvp-done', 'wip', 'planned', 'abandoned', 'idea-only', 'template', 'empty'];
+    var statusLabels = { 'active': 'Active', 'mvp-done': 'MVP Done', 'wip': 'WIP', 'planned': 'Planned', 'abandoned': 'Abandoned', 'idea-only': 'Idea Only', 'template': 'Template', 'empty': 'Empty' };
+    var statusColors = { 'active': '#34d399', 'mvp-done': '#22d3ee', 'wip': '#fbbf24', 'planned': '#60a5fa', 'abandoned': '#f87171', 'idea-only': '#9ca3af', 'template': '#a78bfa', 'empty': '#4b5563' };
+    var domains = [];
+    var domainSet = {};
+    CATALOG.forEach(function(p) {
+        if (p.domain && !domainSet[p.domain]) {
+            domainSet[p.domain] = true;
+            domains.push(p.domain);
+        }
+    });
+    domains.sort();
+
+    /* ── Filtered Data ──────────────────────── */
+    function getFiltered() {
+        return CATALOG.filter(function(p) {
+            if (statusFilter !== 'all' && p.status !== statusFilter) return false;
+            if (domainFilter !== 'all' && p.domain !== domainFilter) return false;
+            if (searchTerm) {
+                var q = searchTerm.toLowerCase();
+                var hay = (p.name + ' ' + p.purpose + ' ' + (p.tech_stack || []).join(' ') + ' ' + p.domain).toLowerCase();
+                if (hay.indexOf(q) === -1) return false;
+            }
+            return true;
+        });
+    }
+
+    function getSorted(data) {
+        var d = data.slice();
+        d.sort(function(a, b) {
+            var va, vb;
+            if (sortCol === 'name') { va = a.name.toLowerCase(); vb = b.name.toLowerCase(); }
+            else if (sortCol === 'status') { va = a.status; vb = b.status; }
+            else if (sortCol === 'domain') { va = a.domain || ''; vb = b.domain || ''; }
+            else if (sortCol === 'tech') { va = (a.tech_stack || []).length; vb = (b.tech_stack || []).length; }
+            else if (sortCol === 'outputs') {
+                var oa = a.outputs || {};
+                var ob = b.outputs || {};
+                va = (oa.html_files || []).length + (oa.report_files || []).length + (oa.launch || []).length;
+                vb = (ob.html_files || []).length + (ob.report_files || []).length + (ob.launch || []).length;
+            }
+            else { va = a.name.toLowerCase(); vb = b.name.toLowerCase(); }
+            if (va < vb) return sortDir === 'asc' ? -1 : 1;
+            if (va > vb) return sortDir === 'asc' ? 1 : -1;
+            return 0;
+        });
+        return d;
+    }
+
+    /* ── Build Header ───────────────────────── */
+    function buildHeader() {
+        var total = CATALOG.length;
+        var active = CATALOG.filter(function(p) { return p.status === 'active' || p.status === 'wip'; }).length;
+        var withUI = CATALOG.filter(function(p) { return p.has_ui; }).length;
+        var withOutputs = CATALOG.filter(function(p) {
+            var o = p.outputs || {};
+            return (o.html_files || []).length + (o.report_files || []).length + (o.launch || []).length > 0;
+        }).length;
+        var planned = CATALOG.filter(function(p) { return p.status === 'planned'; }).length;
+
+        var header = el('div', {className: 'header fade-up'}, [
+            el('div', {className: 'header-row'}, [
+                el('div', {className: 'header-icon'}, [
+                    (function() {
+                        var s = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+                        s.setAttribute('width', '24'); s.setAttribute('height', '24');
+                        s.setAttribute('viewBox', '0 0 24 24'); s.setAttribute('fill', 'none');
+                        s.setAttribute('stroke', 'white'); s.setAttribute('stroke-width', '2');
+                        var c = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+                        c.setAttribute('cx', '12'); c.setAttribute('cy', '12'); c.setAttribute('r', '3');
+                        var p1 = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+                        p1.setAttribute('d', 'M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83');
+                        s.appendChild(c); s.appendChild(p1);
+                        return s;
+                    })()
+                ]),
+                el('h1', {textContent: 'Observatory'})
+            ]),
+            el('div', {className: 'header-sub', textContent: 'Multiverse Forge Lab'}),
+            el('a', {className: 'back-link', href: '../index.html', textContent: 'Back to Dashboard'})
+        ]);
+
+        var stats = el('div', {className: 'stats-bar fade-up'});
+        var statData = [
+            {v: total, l: 'Projects'},
+            {v: active, l: 'Active / WIP'},
+            {v: withUI, l: 'With UI'},
+            {v: withOutputs, l: 'With Outputs'},
+            {v: planned, l: 'Planned'}
+        ];
+        statData.forEach(function(s, i) {
+            var card = el('div', {className: 'stat-card', style: {animationDelay: (i * 60) + 'ms'}}, [
+                el('div', {className: 'stat-value', textContent: String(s.v)}),
+                el('div', {className: 'stat-label', textContent: s.l})
+            ]);
+            stats.appendChild(card);
+        });
+
+        return el('div', null, [header, stats]);
+    }
+
+    /* ── Build Toolbar ──────────────────────── */
+    function buildToolbar() {
+        var planned = CATALOG.filter(function(p) { return p.status === 'planned'; }).length;
+        var existing = CATALOG.length - planned;
+
+        var toggle = el('div', {className: 'view-toggle'});
+        var views = [
+            {id: 'summary', label: 'Summary'},
+            {id: 'grid', label: 'Grid', count: existing},
+            {id: 'planned', label: 'Planned', count: planned}
+        ];
+        views.forEach(function(v) {
+            var children = [document.createTextNode(v.label)];
+            if (v.count !== undefined) {
+                children.push(el('span', {className: 'badge', textContent: String(v.count)}));
+            }
+            var btn = el('button', {
+                type: 'button',
+                className: 'view-btn' + (currentView === v.id ? ' active' : ''),
+                dataset: {view: v.id},
+                onclick: function() { switchView(v.id); }
+            }, children);
+            toggle.appendChild(btn);
+        });
+
+        return el('div', {className: 'toolbar fade-up'}, [toggle]);
+    }
+
+    /* ── Build Summary ──────────────────────── */
+    function buildSummary() {
+        var wrapper = el('div', {className: 'summary-view' + (currentView === 'summary' ? ' visible' : '')});
+
+        // Status counts
+        var statusCounts = {};
+        statuses.forEach(function(s) { statusCounts[s] = 0; });
+        CATALOG.forEach(function(p) { if (statusCounts[p.status] !== undefined) statusCounts[p.status]++; });
+        var total = CATALOG.length;
+
+        // Build donut chart
+        var donutCard = el('div', {className: 'chart-card'}, [
+            el('div', {className: 'chart-title', textContent: 'Status Distribution'})
+        ]);
+        var donutWrap = el('div', {className: 'donut-wrapper'});
+        var donut = el('div', {className: 'donut'});
+
+        // Calculate conic gradient
+        var segments = [];
+        var angle = 0;
+        statuses.forEach(function(s) {
+            if (statusCounts[s] > 0) {
+                var deg = (statusCounts[s] / total) * 360;
+                segments.push(statusColors[s] + ' ' + angle + 'deg ' + (angle + deg) + 'deg');
+                angle += deg;
+            }
+        });
+        donut.style.background = 'conic-gradient(' + segments.join(', ') + ')';
+
+        var hole = el('div', {className: 'donut-hole'}, [
+            el('div', {className: 'donut-total', textContent: String(total)}),
+            el('div', {className: 'donut-label', textContent: 'Total'})
+        ]);
+        donut.appendChild(hole);
+        donutWrap.appendChild(donut);
+
+        // Legend
+        var legend = el('div', {className: 'legend'});
+        statuses.forEach(function(s) {
+            if (statusCounts[s] > 0) {
+                legend.appendChild(el('div', {className: 'legend-item'}, [
+                    el('div', {className: 'legend-dot', style: {background: statusColors[s]}}),
+                    document.createTextNode(statusLabels[s] + ' (' + statusCounts[s] + ')')
+                ]));
+            }
+        });
+        donutWrap.appendChild(legend);
+        donutCard.appendChild(donutWrap);
+
+        // Domain bar chart
+        var domainCounts = {};
+        CATALOG.forEach(function(p) {
+            if (p.domain) domainCounts[p.domain] = (domainCounts[p.domain] || 0) + 1;
+        });
+        var domainArr = Object.keys(domainCounts).map(function(d) { return {name: d, count: domainCounts[d]}; });
+        domainArr.sort(function(a, b) { return b.count - a.count; });
+        var maxCount = domainArr.length > 0 ? domainArr[0].count : 1;
+
+        var barCard = el('div', {className: 'chart-card'}, [
+            el('div', {className: 'chart-title', textContent: 'Domain Breakdown'})
+        ]);
+        var barChart = el('div', {className: 'bar-chart'});
+        domainArr.forEach(function(d, i) {
+            var pct = (d.count / maxCount) * 100;
+            var row = el('div', {className: 'bar-row'}, [
+                el('div', {className: 'bar-name', textContent: d.name}),
+                el('div', {className: 'bar-track'}, [
+                    el('div', {className: 'bar-fill', style: {width: '0%'}})
+                ]),
+                el('div', {className: 'bar-count', textContent: String(d.count)})
+            ]);
+            barChart.appendChild(row);
+            // Animate after append
+            setTimeout(function() {
+                var fill = row.querySelector('.bar-fill');
+                if (fill) fill.style.width = pct + '%';
+            }, 100 + i * 50);
+        });
+        barCard.appendChild(barChart);
+
+        var chartsRow = el('div', {className: 'charts-row'}, [donutCard, barCard]);
+        wrapper.appendChild(chartsRow);
+
+        // Table
+        wrapper.appendChild(buildTable());
+        return wrapper;
+    }
+
+    /* ── Build Table ────────────────────────── */
+    function buildTable() {
+        var tw = el('div', {className: 'table-wrapper'});
+        var table = el('table');
+        var thead = el('thead');
+        var headerRow = el('tr');
+        var cols = [
+            {id: 'name', label: 'Project'},
+            {id: 'status', label: 'Status'},
+            {id: 'domain', label: 'Domain'},
+            {id: 'tech', label: 'Stack'},
+            {id: 'outputs', label: 'Outputs'}
+        ];
+        cols.forEach(function(c) {
+            var th_el = el('th', {
+                className: sortCol === c.id ? 'sorted' : '',
+                onclick: function() {
+                    if (sortCol === c.id) sortDir = sortDir === 'asc' ? 'desc' : 'asc';
+                    else { sortCol = c.id; sortDir = 'asc'; }
+                    refreshTable();
+                }
+            }, [
+                document.createTextNode(c.label),
+                el('span', {className: 'sort-arrow', textContent: sortCol === c.id ? (sortDir === 'asc' ? ' \u25B2' : ' \u25BC') : ' \u25B2'})
+            ]);
+            headerRow.appendChild(th_el);
+        });
+        thead.appendChild(headerRow);
+        table.appendChild(thead);
+
+        var tbody = el('tbody', {id: 'table-body'});
+        table.appendChild(tbody);
+        tw.appendChild(table);
+        setTimeout(function() { refreshTable(); }, 0);
+        return tw;
+    }
+
+    function refreshTable() {
+        var tbody = document.getElementById('table-body');
+        if (!tbody) return;
+        while (tbody.firstChild) tbody.removeChild(tbody.firstChild);
+
+        var data = getSorted(getFiltered());
+        data.forEach(function(p) {
+            var row = el('tr');
+            row.appendChild(el('td', {className: 'td-name', textContent: p.name}));
+
+            var statusTd = el('td');
+            statusTd.appendChild(el('span', {
+                className: 'td-status s-' + p.status,
+                textContent: statusLabels[p.status] || p.status
+            }));
+            row.appendChild(statusTd);
+
+            row.appendChild(el('td', {textContent: p.domain || '-'}));
+            row.appendChild(el('td', {textContent: (p.tech_stack || []).slice(0, 3).join(', ') || '-'}));
+
+            var outTd = el('td');
+            var outDiv = el('div', {className: 'td-outputs'});
+            var o = p.outputs || {};
+            var htmlCount = (o.html_files || []).length;
+            var reportCount = (o.report_files || []).length;
+            var launchCount = (o.launch || []).length;
+            for (var i = 0; i < Math.min(htmlCount, 3); i++) outDiv.appendChild(el('div', {className: 'output-pip pip-html', title: 'HTML output'}));
+            for (var j = 0; j < Math.min(reportCount, 3); j++) outDiv.appendChild(el('div', {className: 'output-pip pip-report', title: 'Report'}));
+            for (var k = 0; k < Math.min(launchCount, 3); k++) outDiv.appendChild(el('div', {className: 'output-pip pip-launch', title: 'Launchable'}));
+            if (htmlCount + reportCount + launchCount === 0) outDiv.appendChild(el('span', {className: 'card-icon', textContent: '-'}));
+            outTd.appendChild(outDiv);
+            row.appendChild(outTd);
+
+            tbody.appendChild(row);
+        });
+
+        // Update sort arrows
+        var ths = document.querySelectorAll('th');
+        ths.forEach(function(th) {
+            var arrow = th.querySelector('.sort-arrow');
+            if (!arrow) return;
+            th.className = '';
+            arrow.textContent = ' \u25B2';
+        });
+        var cols = ['name', 'status', 'domain', 'tech', 'outputs'];
+        var idx = cols.indexOf(sortCol);
+        if (idx >= 0 && ths[idx]) {
+            ths[idx].className = 'sorted';
+            var ar = ths[idx].querySelector('.sort-arrow');
+            if (ar) ar.textContent = sortDir === 'asc' ? ' \u25B2' : ' \u25BC';
+        }
+    }
+
+    /* ── Build Grid View ────────────────────── */
+    function buildGridView() {
+        var wrapper = el('div', {className: 'grid-view' + (currentView === 'grid' ? ' visible' : '')});
+
+        // Controls
+        var controls = el('div', {className: 'controls'});
+        var search = el('input', {
+            type: 'text',
+            className: 'search-box',
+            placeholder: 'Search projects by name, purpose, tech stack...',
+            oninput: function(e) { searchTerm = e.target.value; renderGrid(); }
+        });
+        controls.appendChild(search);
+
+        // Status filters
+        var statusRow = el('div', {className: 'filter-row'});
+        statusRow.appendChild(el('span', {className: 'filter-label', textContent: 'Status'}));
+        var statusGroup = el('div', {className: 'filter-group'});
+        var allBtn = el('button', {
+            type: 'button',
+            className: 'filter-btn' + (statusFilter === 'all' ? ' active' : ''),
+            textContent: 'All',
+            onclick: function() { statusFilter = 'all'; refreshFilters(); renderGrid(); }
+        });
+        statusGroup.appendChild(allBtn);
+        statuses.forEach(function(s) {
+            statusGroup.appendChild(el('button', {
+                type: 'button',
+                className: 'filter-btn' + (statusFilter === s ? ' active' : ''),
+                textContent: statusLabels[s],
+                onclick: function() { statusFilter = s; refreshFilters(); renderGrid(); }
+            }));
+        });
+        statusRow.appendChild(statusGroup);
+        controls.appendChild(statusRow);
+
+        // Domain filters
+        var domainRow = el('div', {className: 'filter-row'});
+        domainRow.appendChild(el('span', {className: 'filter-label', textContent: 'Domain'}));
+        var domainGroup = el('div', {className: 'filter-group'});
+        domainGroup.appendChild(el('button', {
+            type: 'button',
+            className: 'filter-btn' + (domainFilter === 'all' ? ' active' : ''),
+            textContent: 'All',
+            onclick: function() { domainFilter = 'all'; refreshFilters(); renderGrid(); }
+        }));
+        domains.forEach(function(d) {
+            domainGroup.appendChild(el('button', {
+                type: 'button',
+                className: 'filter-btn' + (domainFilter === d ? ' active' : ''),
+                textContent: d,
+                onclick: function() { domainFilter = d; refreshFilters(); renderGrid(); }
+            }));
+        });
+        domainRow.appendChild(domainGroup);
+        controls.appendChild(domainRow);
+
+        controls.appendChild(el('div', {className: 'results-count', id: 'results-count'}));
+        wrapper.appendChild(controls);
+
+        wrapper.appendChild(el('div', {className: 'grid', id: 'card-grid'}));
+        setTimeout(function() { renderGrid(); }, 0);
+        return wrapper;
+    }
+
+    function refreshFilters() {
+        document.querySelectorAll('.filter-btn').forEach(function(b) { b.classList.remove('active'); });
+        // Re-render will rebuild with correct active states
+    }
+
+    function renderGrid() {
+        var grid = document.getElementById('card-grid');
+        var countEl = document.getElementById('results-count');
+        if (!grid) return;
+        while (grid.firstChild) grid.removeChild(grid.firstChild);
+
+        var data = getSorted(getFiltered().filter(function(p) { return p.status !== 'planned'; }));
+        if (countEl) countEl.textContent = data.length + ' project' + (data.length !== 1 ? 's' : '');
+
+        if (data.length === 0) {
+            grid.appendChild(el('div', {className: 'empty-state'}, [
+                el('h3', {textContent: 'No projects match your filters'}),
+                el('p', {textContent: 'Try adjusting your search or filters'})
+            ]));
+            return;
+        }
+
+        data.forEach(function(p, i) {
+            grid.appendChild(buildCard(p, i));
+        });
+
+        // Re-highlight active filter buttons
+        document.querySelectorAll('.filter-btn').forEach(function(btn) {
+            var text = btn.textContent;
+            if (text === 'All' && statusFilter === 'all' && btn.closest('.filter-row').querySelector('.filter-label').textContent === 'Status') btn.classList.add('active');
+            if (text === 'All' && domainFilter === 'all' && btn.closest('.filter-row').querySelector('.filter-label').textContent === 'Domain') btn.classList.add('active');
+            statuses.forEach(function(s) { if (statusLabels[s] === text && statusFilter === s) btn.classList.add('active'); });
+            domains.forEach(function(d) { if (d === text && domainFilter === d) btn.classList.add('active'); });
+        });
+    }
+
+    /* ── Build Card ──────────────────────────── */
+    function buildCard(p, idx) {
+        var card = el('div', {
+            className: 'card card-bl-' + p.status,
+            style: {animationDelay: Math.min(idx * 30, 500) + 'ms'},
+            onclick: function(e) {
+                if (e.target.closest('.output-btn')) return;
+                card.classList.toggle('expanded');
+            }
+        });
+
+        // Header
+        var header = el('div', {className: 'card-header'}, [
+            el('div', {className: 'card-name', textContent: p.name}),
+            el('span', {className: 'card-status s-' + p.status, textContent: statusLabels[p.status] || p.status})
+        ]);
+        card.appendChild(header);
+
+        // Purpose
+        card.appendChild(el('div', {className: 'card-purpose', textContent: p.purpose}));
+
+        // Tags
+        var tags = el('div', {className: 'card-tags'});
+        if (p.domain) tags.appendChild(el('span', {className: 'tag tag-domain', textContent: p.domain}));
+        if (p.has_ui && p.ui_type !== 'none') tags.appendChild(el('span', {className: 'tag tag-ui', textContent: p.ui_type}));
+        (p.tech_stack || []).slice(0, 4).forEach(function(t) {
+            tags.appendChild(el('span', {className: 'tag tag-tech', textContent: t}));
+        });
+        card.appendChild(tags);
+
+        // Footer
+        var footer = el('div', {className: 'card-footer'});
+        var icons = el('div', {className: 'card-icons'});
+        icons.appendChild(el('span', {className: 'card-icon'}, [
+            el('span', {className: 'dot ' + (p.has_tests ? 'dot-green' : 'dot-gray')}),
+            document.createTextNode(p.has_tests ? p.test_count + ' tests' : 'No tests')
+        ]));
+        var o = p.outputs || {};
+        var outCount = (o.html_files || []).length + (o.report_files || []).length + (o.launch || []).length;
+        if (outCount > 0) {
+            icons.appendChild(el('span', {className: 'card-icon'}, [
+                el('span', {className: 'dot dot-green'}),
+                document.createTextNode(outCount + ' output' + (outCount !== 1 ? 's' : ''))
+            ]));
+        }
+        footer.appendChild(icons);
+        if (p.last_modified && p.last_modified !== 'N/A') {
+            footer.appendChild(el('span', {className: 'card-date', textContent: p.last_modified}));
+        }
+        card.appendChild(footer);
+
+        // Expanded details
+        var details = el('div', {className: 'card-details'});
+
+        // Sub-projects
+        if (p.sub_projects && p.sub_projects.length > 0) {
+            var subSec = el('div', {className: 'detail-section'});
+            subSec.appendChild(el('div', {className: 'detail-label', textContent: 'Sub-projects'}));
+            var subList = el('ul', {className: 'detail-list'});
+            p.sub_projects.forEach(function(sp) {
+                subList.appendChild(el('li', {textContent: sp}));
+            });
+            subSec.appendChild(subList);
+            details.appendChild(subSec);
+        }
+
+        // Key outputs
+        if (p.key_outputs && p.key_outputs.length > 0) {
+            var koSec = el('div', {className: 'detail-section'});
+            koSec.appendChild(el('div', {className: 'detail-label', textContent: 'Key Outputs'}));
+            var koList = el('ul', {className: 'detail-list'});
+            p.key_outputs.forEach(function(ko) {
+                koList.appendChild(el('li', {textContent: ko}));
+            });
+            koSec.appendChild(koList);
+            details.appendChild(koSec);
+        }
+
+        // Output action buttons
+        if (o.launch && o.launch.length > 0 || o.html_files && o.html_files.length > 0 || o.report_files && o.report_files.length > 0) {
+            var actSec = el('div', {className: 'detail-section'});
+            actSec.appendChild(el('div', {className: 'detail-label', textContent: 'Access'}));
+            var actions = el('div', {className: 'output-actions'});
+
+            // Launch commands
+            (o.launch || []).forEach(function(l) {
+                if (l.type === 'web' && l.url) {
+                    var a = el('a', {
+                        className: 'output-btn output-btn-web',
+                        href: l.url,
+                        target: '_blank',
+                        title: l.url
+                    }, [document.createTextNode(l.label)]);
+                    actions.appendChild(a);
+                } else {
+                    var btn = el('button', {
+                        type: 'button',
+                        className: 'output-btn output-btn-launch',
+                        title: l.command || '',
+                        onclick: function(e) {
+                            e.stopPropagation();
+                            navigator.clipboard.writeText(l.command || '');
+                            btn.textContent = 'Copied!';
+                            setTimeout(function() { btn.textContent = l.label; }, 1500);
+                        }
+                    }, [document.createTextNode(l.label)]);
+                    actions.appendChild(btn);
+                }
+            });
+
+            // HTML file links
+            (o.html_files || []).forEach(function(h) {
+                var fname = h.path.split('/').pop();
+                actions.appendChild(el('a', {
+                    className: 'output-btn output-btn-html',
+                    href: h.file_url,
+                    target: '_blank',
+                    title: h.path
+                }, [document.createTextNode(fname)]));
+            });
+
+            // Report file links
+            (o.report_files || []).forEach(function(r) {
+                var fname = r.path.split('/').pop();
+                actions.appendChild(el('a', {
+                    className: 'output-btn output-btn-report',
+                    href: r.file_url,
+                    target: '_blank',
+                    title: r.path
+                }, [document.createTextNode(fname)]));
+            });
+
+            actSec.appendChild(actions);
+            details.appendChild(actSec);
+        }
+
+        card.appendChild(details);
+        return card;
+    }
+
+    /* ── Build Planned View ─────────────────── */
+    function buildPlannedView() {
+        var wrapper = el('div', {className: 'planned-view' + (currentView === 'planned' ? ' visible' : '')});
+        var planned = CATALOG.filter(function(p) { return p.status === 'planned'; });
+
+        var groups = {'P1': [], 'P2': [], 'P3': []};
+        planned.forEach(function(p) {
+            var pri = p.priority || 'P3';
+            if (!groups[pri]) groups[pri] = [];
+            groups[pri].push(p);
+        });
+
+        var labels = {'P1': 'High Priority', 'P2': 'Medium Priority', 'P3': 'Low Priority / Parked'};
+        var badgeClass = {'P1': 'pb-p1', 'P2': 'pb-p2', 'P3': 'pb-p3'};
+
+        ['P1', 'P2', 'P3'].forEach(function(pri) {
+            if (groups[pri].length === 0) return;
+            var section = el('div', {className: 'priority-section'});
+            section.appendChild(el('div', {className: 'priority-header'}, [
+                el('span', {className: 'priority-badge ' + badgeClass[pri], textContent: pri}),
+                document.createTextNode(labels[pri] + ' (' + groups[pri].length + ')')
+            ]));
+
+            var list = el('div', {className: 'planned-list'});
+            groups[pri].forEach(function(p) {
+                var card = el('div', {className: 'planned-card'}, [
+                    el('div', {className: 'planned-name', textContent: p.name}),
+                    el('div', {className: 'planned-desc', textContent: p.purpose}),
+                    p.domain ? el('span', {className: 'tag tag-domain planned-domain', textContent: p.domain}) : null
+                ]);
+                list.appendChild(card);
+            });
+            section.appendChild(list);
+            wrapper.appendChild(section);
+        });
+
+        if (planned.length === 0) {
+            wrapper.appendChild(el('div', {className: 'empty-state'}, [
+                el('h3', {textContent: 'No planned projects'}),
+                el('p', {textContent: 'All ideas have been built!'})
+            ]));
+        }
+
+        return wrapper;
+    }
+
+    /* ── View Switching ─────────────────────── */
+    function switchView(view) {
+        currentView = view;
+        document.querySelectorAll('.view-btn').forEach(function(b) {
+            b.classList.toggle('active', b.dataset.view === view);
+        });
+        var sv = document.querySelector('.summary-view');
+        var gv = document.querySelector('.grid-view');
+        var pv = document.querySelector('.planned-view');
+        if (sv) sv.classList.toggle('visible', view === 'summary');
+        if (gv) gv.classList.toggle('visible', view === 'grid');
+        if (pv) pv.classList.toggle('visible', view === 'planned');
+    }
+
+    /* ── Init ───────────────────────────────── */
+    function init() {
+        var app = document.getElementById('app');
+        app.appendChild(buildHeader());
+        app.appendChild(buildToolbar());
+        app.appendChild(buildSummary());
+        app.appendChild(buildGridView());
+        app.appendChild(buildPlannedView());
+    }
+
+    init();
+    </script>
+</body>
+</html>
