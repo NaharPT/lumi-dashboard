@@ -947,6 +947,65 @@
         .score-2 { color: #fb923c; }
         .score-1 { color: #9ca3af; }
         .score-0 { color: #4b5563; }
+        /* ── Reviewed State ─────────────────────── */
+        .card.reviewed { opacity: 0.45; }
+        .card.reviewed:hover { opacity: 0.7; }
+        .card.reviewed .card-name::after {
+            content: ' \2713';
+            color: var(--status-active);
+            font-size: 14px;
+        }
+        .review-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-size: 10px;
+            font-family: 'DM Sans', sans-serif;
+            font-weight: 600;
+            cursor: pointer;
+            border: 1px solid rgba(52, 211, 153, 0.2);
+            background: rgba(52, 211, 153, 0.06);
+            color: var(--status-active);
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            transition: all 0.2s;
+        }
+        .review-btn:hover {
+            background: rgba(52, 211, 153, 0.15);
+            border-color: rgba(52, 211, 153, 0.35);
+        }
+        .review-btn.is-reviewed {
+            background: rgba(52, 211, 153, 0.12);
+            border-color: rgba(52, 211, 153, 0.3);
+            color: var(--status-active);
+        }
+        .rq-item.rq-reviewed { opacity: 0.35; }
+        .rq-item.rq-reviewed .rq-name::after {
+            content: ' \2713';
+            color: var(--status-active);
+            font-size: 12px;
+        }
+        .filter-toggle {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            margin-left: auto;
+            font-size: 12px;
+            color: var(--text-muted);
+            cursor: pointer;
+            -webkit-user-select: none;
+            user-select: none;
+        }
+        .filter-toggle input {
+            accent-color: var(--cyan);
+        }
+        .reviewed-counter {
+            font-size: 11px;
+            color: var(--text-muted);
+            margin-left: 12px;
+        }
         .hidden { display: none !important; }
         /* ── Responsive ─────────────────────────── */
         @media (max-width: 900px) {
@@ -1013,6 +1072,21 @@
     var domainFilter = 'all';
     var sortCol = 'name';
     var sortDir = 'asc';
+    var hideReviewed = false;
+
+    /* ── Reviewed State (localStorage) ──────── */
+    var STORAGE_KEY = 'observatory_reviewed';
+    function getReviewed() {
+        try { return JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}'); } catch(e) { return {}; }
+    }
+    function setReviewed(name, val) {
+        var r = getReviewed();
+        if (val) { r[name] = new Date().toISOString().slice(0, 10); }
+        else { delete r[name]; }
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(r));
+    }
+    function isReviewed(name) { return !!getReviewed()[name]; }
+    function reviewedCount() { return Object.keys(getReviewed()).length; }
 
     var statuses = ['active', 'mvp-done', 'wip', 'planned', 'abandoned', 'idea-only', 'template', 'empty'];
     var statusLabels = { 'active': 'Active', 'mvp-done': 'MVP Done', 'wip': 'WIP', 'planned': 'Planned', 'abandoned': 'Abandoned', 'idea-only': 'Idea Only', 'template': 'Template', 'empty': 'Empty' };
@@ -1142,7 +1216,38 @@
             toggle.appendChild(btn);
         });
 
-        return el('div', {className: 'toolbar fade-up'}, [toggle]);
+        var reviewToggle = el('label', {className: 'filter-toggle'});
+        var checkbox = el('input', {
+            type: 'checkbox',
+            onchange: function() {
+                hideReviewed = checkbox.checked;
+                renderGrid();
+                updateReviewQueueVisibility();
+            }
+        });
+        reviewToggle.appendChild(checkbox);
+        reviewToggle.appendChild(document.createTextNode('Hide reviewed'));
+        var revCounter = el('span', {className: 'reviewed-counter', id: 'reviewed-counter', textContent: reviewedCount() + '/' + CATALOG.length + ' reviewed'});
+        reviewToggle.appendChild(revCounter);
+
+        return el('div', {className: 'toolbar fade-up'}, [toggle, reviewToggle]);
+    }
+
+    function updateReviewedCounters() {
+        var el_counter = document.getElementById('reviewed-counter');
+        if (el_counter) el_counter.textContent = reviewedCount() + '/' + CATALOG.length + ' reviewed';
+    }
+
+    function updateReviewQueueVisibility() {
+        var items = document.querySelectorAll('.rq-item[data-project]');
+        items.forEach(function(item) {
+            var name = item.dataset.project;
+            if (name) {
+                item.classList.toggle('rq-reviewed', isReviewed(name));
+                if (hideReviewed && isReviewed(name)) item.style.display = 'none';
+                else item.style.display = '';
+            }
+        });
     }
 
     /* ── Build Summary ──────────────────────── */
@@ -1247,7 +1352,7 @@
         });
         ranked.slice(0, 15).forEach(function(p, i) {
             var aa = p.assessment || {};
-            var item = el('div', {className: 'rq-item'});
+            var item = el('div', {className: 'rq-item' + (isReviewed(p.name) ? ' rq-reviewed' : ''), dataset: {project: p.name}});
             item.appendChild(el('div', {className: 'rq-rank', textContent: String(i + 1)}));
             var nameCol = el('div');
             nameCol.appendChild(el('div', {className: 'rq-name'}, [
@@ -1445,7 +1550,11 @@
         if (!grid) return;
         while (grid.firstChild) grid.removeChild(grid.firstChild);
 
-        var data = getSorted(getFiltered().filter(function(p) { return p.status !== 'planned'; }));
+        var data = getSorted(getFiltered().filter(function(p) {
+            if (p.status === 'planned') return false;
+            if (hideReviewed && isReviewed(p.name)) return false;
+            return true;
+        }));
         if (countEl) countEl.textContent = data.length + ' project' + (data.length !== 1 ? 's' : '');
 
         if (data.length === 0) {
@@ -1536,10 +1645,31 @@
             ]));
         }
         footer.appendChild(icons);
+
+        // Review button
+        var revBtn = el('button', {
+            type: 'button',
+            className: 'review-btn' + (isReviewed(p.name) ? ' is-reviewed' : ''),
+            textContent: isReviewed(p.name) ? 'Reviewed' : 'Mark Reviewed',
+            onclick: function(e) {
+                e.stopPropagation();
+                var wasReviewed = isReviewed(p.name);
+                setReviewed(p.name, !wasReviewed);
+                card.classList.toggle('reviewed', !wasReviewed);
+                revBtn.textContent = !wasReviewed ? 'Reviewed' : 'Mark Reviewed';
+                revBtn.classList.toggle('is-reviewed', !wasReviewed);
+                updateReviewedCounters();
+            }
+        });
+        footer.appendChild(revBtn);
+
         if (p.last_modified && p.last_modified !== 'N/A') {
             footer.appendChild(el('span', {className: 'card-date', textContent: p.last_modified}));
         }
         card.appendChild(footer);
+
+        // Apply reviewed state
+        if (isReviewed(p.name)) card.classList.add('reviewed');
 
         // Expanded details
         var details = el('div', {className: 'card-details'});
